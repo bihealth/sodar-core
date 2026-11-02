@@ -59,7 +59,7 @@
   {# List of common projects when viewed as different user #}
   {# Only show if user has role or public access is set (hide for stats-only) #}
   {% if request.user != user and not user.is_superuser %}
-    {% include 'projectroles/_project_list.html' with other_user=user %}
+    {% include 'projectroles/_project_list.html' with other_user=user project_list_starred_default=False %}
   {% endif %}
 </div>
 

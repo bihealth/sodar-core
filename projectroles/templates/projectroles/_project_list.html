@@ -4,28 +4,26 @@
 <div class="card" id="sodar-pr-project-list">
   <div class="card-header">
     <h4>
-      {% if not parent %}
+      {% if other_user %}
+        <i class="iconify" data-icon="mdi:account-supervisor"></i>
+        {% if request.user.is_superuser %}
+          {{ other_user.username }}'s
+        {% elif request.user.is_authenticated %}
+          Mutual
+        {% endif %}
+      {% elif not parent %}
         <i class="iconify" data-icon="mdi:earth"></i>
         {% if request.user.is_superuser %}
-          {% if other_user %}
-            {{ other_user.username }}'s
-          {% else %}
-            All
-          {% endif %}
+          All
         {% elif request.user.is_authenticated %}
-          {% if other_user %}
-            Common
-          {% else %}
-            Your
-          {% endif %}
+          Your
         {% else %}
           Public
         {% endif %}
-          {% get_display_name 'PROJECT' title=True plural=True %}
       {% else %}
         <i class="iconify" data-icon="mdi:rhombus-split"></i>
-        {% get_display_name 'PROJECT' title=True plural=True %}
       {% endif %}
+      {% get_display_name 'PROJECT' title=True plural=True %}
       <div class="input-group sodar-header-input-group
                   sodar-pr-project-list-input-group{% if not user.is_authenticated %}-anon{% endif %}
                   pull-right">
