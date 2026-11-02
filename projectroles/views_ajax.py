@@ -422,12 +422,15 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             other_projects = set(
                 self._get_projects(other_user, pub_stat_cats, parent)
             )
-            other_pub_only_projects = self._get_public_only_projects(other_user)
+            pub_only_projects = set(
+                self._get_public_only_projects(other_user)
+                | self._get_public_only_projects(user)
+            )
             # Projects both the requesting user and the queried user can access
             projects = [
                 p
                 for p in self._get_projects(user, pub_stat_cats, parent)
-                if p in other_projects and p not in other_pub_only_projects
+                if p in other_projects and p not in pub_only_projects
             ]
         else:
             # Projects the requesting user can access
