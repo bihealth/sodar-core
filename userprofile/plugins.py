@@ -69,7 +69,7 @@ class UserListSiteAppPlugin(SiteAppPluginPoint):
     urls = urls_list
 
     #: Iconify icon
-    icon = 'mdi:account-search'
+    icon = 'mdi:account-multiple-outline'
 
     #: Description string
     description = 'List of users on the site'

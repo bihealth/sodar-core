@@ -335,18 +335,16 @@ class TestUserDetailView(
         self.login_and_redirect(self.regular_user, url)
         WebDriverWait(self.selenium, 15).until(
             lambda x: x.find_element(
-                By.CSS_SELECTOR, '#sodar-up-ajax-user-list-table a:nth-child(1)'
+                By.CSS_SELECTOR, '#sodar-up-user-list-table-body a:nth-child(1)'
             )
         )
         self.selenium.find_element(
-            By.CSS_SELECTOR, '#sodar-up-ajax-user-list-table a:nth-child(1)'
+            By.CSS_SELECTOR, '#sodar-up-user-list-table-body a:nth-child(1)'
         ).click()
         WebDriverWait(self.selenium, 15).until(
-            lambda x: x.find_element(By.ID, 'sodar-up-public-view-back-btn')
+            lambda x: x.find_element(By.ID, 'sodar-up-detail-back-btn')
         )
-        back_btn = self.selenium.find_element(
-            By.ID, 'sodar-up-public-view-back-btn'
-        )
+        back_btn = self.selenium.find_element(By.ID, 'sodar-up-detail-back-btn')
         self.assertEqual(back_btn.text, 'Back')
         self.assertTrue(back_btn.get_attribute('href').endswith(url))
 
@@ -369,11 +367,9 @@ class TestUserDetailView(
             By.CSS_SELECTOR, '#sodar-pr-role-list-table a:nth-child(1)'
         ).click()
         WebDriverWait(self.selenium, 15).until(
-            lambda x: x.find_element(By.ID, 'sodar-up-public-view-back-btn')
+            lambda x: x.find_element(By.ID, 'sodar-up-detail-back-btn')
         )
-        back_btn = self.selenium.find_element(
-            By.ID, 'sodar-up-public-view-back-btn'
-        )
+        back_btn = self.selenium.find_element(By.ID, 'sodar-up-detail-back-btn')
         self.assertEqual(back_btn.text, 'Back')
         self.assertTrue(back_btn.get_attribute('href').endswith(url))
 
@@ -382,7 +378,7 @@ class TestUserDetailView(
         url = reverse('userprofile:detail')
         self.login_and_redirect(self.local_user, url)
         with self.assertRaises(NoSuchElementException):
-            self.selenium.find_element(By.ID, 'sodar-up-public-view-back-btn')
+            self.selenium.find_element(By.ID, 'sodar-up-detail-back-btn')
 
 
 class TestUserAppSettingsView(SiteUITestBase):
@@ -510,15 +506,14 @@ class TestUserListView(SiteUITestBase):
         )
         self.assertTrue(table_href.endswith(user_profile_link))
         self.assertEqual(cells[0].text, user.username)
-        self.assertEqual(cells[1].text, user.first_name)
-        self.assertEqual(cells[2].text, user.last_name)
-        self.assertEqual(cells[3].text, user.email)
+        self.assertEqual(cells[1].text, user.name)
+        self.assertEqual(cells[2].text, user.email)
         self.assertEqual(
-            cells[3].find_element(By.TAG_NAME, 'a').get_attribute('href'),
+            cells[2].find_element(By.TAG_NAME, 'a').get_attribute('href'),
             f'mailto:{user.email}',
         )
         self.assertEqual(
-            cells[4].text,
+            cells[3].text,
             localtime(user.date_joined).strftime('%Y-%m-%d'),
         )
 
@@ -527,12 +522,12 @@ class TestUserListView(SiteUITestBase):
         self.login_and_redirect(
             self.regular_user,
             self.url,
-            '#sodar-up-ajax-user-list-table tr',
+            '#sodar-up-user-list-table-body tr',
             'CSS_SELECTOR',
         )
         rows = self.selenium.find_elements(
             By.CSS_SELECTOR,
-            '#sodar-up-ajax-user-list-table tr',
+            '#sodar-up-user-list-table-body tr',
         )
         self.assertEqual(len(rows), 3)
         self.assert_user_row_fields(rows[0], self.other_user)
@@ -546,12 +541,12 @@ class TestUserListView(SiteUITestBase):
         self.login_and_redirect(
             self.regular_user,
             self.url,
-            '#sodar-up-ajax-user-list-table tr',
+            '#sodar-up-user-list-table-body tr',
             'CSS_SELECTOR',
         )
         rows = self.selenium.find_elements(
             By.CSS_SELECTOR,
-            '#sodar-up-ajax-user-list-table tr',
+            '#sodar-up-user-list-table-body tr',
         )
         self.assertEqual(len(rows), 10)
         select_input = self.selenium.find_element(
@@ -565,7 +560,7 @@ class TestUserListView(SiteUITestBase):
         ).click()
         rows = self.selenium.find_elements(
             By.CSS_SELECTOR,
-            '#sodar-up-ajax-user-list-table tr',
+            '#sodar-up-user-list-table-body tr',
         )
         self.assertEqual(len(rows), 13)
 
@@ -574,7 +569,7 @@ class TestUserListView(SiteUITestBase):
         self.login_and_redirect(
             self.regular_user,
             self.url,
-            '#sodar-up-ajax-user-list-table tr',
+            '#sodar-up-user-list-table-body tr',
             'CSS_SELECTOR',
         )
         filter_input = self.selenium.find_element(
@@ -584,7 +579,7 @@ class TestUserListView(SiteUITestBase):
         filter_input.send_keys('other_u')
         rows = self.selenium.find_elements(
             By.CSS_SELECTOR,
-            '#sodar-up-ajax-user-list-table tr',
+            '#sodar-up-user-list-table-body tr',
         )
         self.assertEqual(len(rows), 1)
         self.assert_user_row_fields(rows[0], self.other_user)

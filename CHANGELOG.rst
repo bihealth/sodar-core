@@ -30,8 +30,9 @@ Added
 - **Timeline**
     - ``TimelineEvent`` ``core_version`` and ``site_version`` fields (#1963)
 - **Userprofile**
-    - ``UserListView`` view for user browsing (#1984)
+    - ``UserListView`` view for user browsing (#1984, #2026, #2035, #2036)
     - ``UserListSiteAppPlugin`` plugin (#1984)
+    - ``UserDetailView`` back navigation (#1984, #1999, #2033)
 
 Changed
 -------

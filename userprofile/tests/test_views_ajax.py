@@ -12,8 +12,7 @@ class TestUserListAjaxView(UserViewTestBase):
     def setUp(self):
         super().setUp()
         self.regular_user = self.make_user('regular_user')
-        self.regular_user.first_name = 'Roger'
-        self.regular_user.last_name = 'Larsen'
+        self.regular_user.name = 'Roger Larsen'
         self.regular_user.save()
         self.other_user = self.make_user('other_user')
         self.other_user.is_active = False
@@ -24,8 +23,7 @@ class TestUserListAjaxView(UserViewTestBase):
         self.expected = [
             {
                 'user_html': get_user_html(self.other_user, request),
-                'first_name': '',
-                'last_name': '',
+                'name': '',
                 'email': 'other_user@example.com',
                 'date_joined': localtime(self.other_user.date_joined).strftime(
                     '%Y-%m-%d'
@@ -33,8 +31,7 @@ class TestUserListAjaxView(UserViewTestBase):
             },
             {
                 'user_html': get_user_html(self.regular_user, request),
-                'first_name': 'Roger',
-                'last_name': 'Larsen',
+                'name': 'Roger Larsen',
                 'email': 'regular_user@example.com',
                 'date_joined': localtime(
                     self.regular_user.date_joined
@@ -42,8 +39,7 @@ class TestUserListAjaxView(UserViewTestBase):
             },
             {
                 'user_html': get_user_html(self.user, request),
-                'first_name': '',
-                'last_name': '',
+                'name': '',
                 'email': 'superuser@example.com',
                 'date_joined': localtime(self.user.date_joined).strftime(
                     '%Y-%m-%d'

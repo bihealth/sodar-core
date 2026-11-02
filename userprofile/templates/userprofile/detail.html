@@ -37,7 +37,9 @@
     User Profile
   </div>
   {% if view.kwargs.user and request.META.HTTP_REFERER %}
-    <a role="button" class="btn btn-secondary ml-auto pull-right" id="sodar-up-public-view-back-btn"
+    <a role="button"
+       class="btn btn-secondary sodar-pr-project-header-btn pt-1 ml-auto pull-right"
+       id="sodar-up-detail-back-btn"
        href="{{ request.META.HTTP_REFERER }}">
       <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back
     </a>

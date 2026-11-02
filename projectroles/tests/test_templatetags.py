@@ -1134,7 +1134,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'name': 'userprofile_list',
                     'url': reverse('userprofile:list'),
                     'label': 'User List',
-                    'icon': 'mdi:account-search',
+                    'icon': 'mdi:account-multiple-outline',
                     'active': False,
                 },
                 {
@@ -1238,7 +1238,7 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'name': 'userprofile_list',
                     'url': reverse('userprofile:list'),
                     'label': 'User List',
-                    'icon': 'mdi:account-search',
+                    'icon': 'mdi:account-multiple-outline',
                     'active': False,
                 },
                 {

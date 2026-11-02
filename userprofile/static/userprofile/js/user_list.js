@@ -1,25 +1,24 @@
 /* Retrieve the list of users and show it as a table */
 
-const userList = $('#sodar-up-ajax-user-list')
-const userListTable = $('#sodar-up-ajax-user-list-table')
+const userListCard = $('#sodar-up-user-list-card')
+const userListTableBody = $('#sodar-up-user-list-table-body')
 const spinner = $('#sodar-up-user-list-spinner')
 
-$.get(userList.data('url')).done(data => {
+$.get(userListCard.data('url')).done(data => {
   spinner.remove()
   for (let user of data) {
     const tr = $('<tr>')
     $('<td>').html(user.user_html).appendTo(tr)
-    $('<td>').text(user.first_name).appendTo(tr)
-    $('<td>').text(user.last_name).appendTo(tr)
+    $('<td>').text(user.name).appendTo(tr)
     $('<td>').html(
       $('<a>', {
         href: 'mailto:' + user.email
       }).text(user.email)
     ).appendTo(tr)
     $('<td>').text(user.date_joined).appendTo(tr)
-    userListTable.append(tr)
+    userListTableBody.append(tr)
   }
-  new DataTable(userListTable.parent('table'), {
+  new DataTable(userListTableBody.parent('table'), {
     order: [], // Disable default ordering
     scrollX: false,
     autoWidth: false,
@@ -39,7 +38,7 @@ $.get(userList.data('url')).done(data => {
    Pagination
    **********/
   $('#sodar-up-user-list-page-length').change(function () {
-    const dt = userList.find('table').DataTable()
+    const dt = userListCard.find('table').DataTable()
     const value = parseInt($(this).val())
     dt.page.len(value).draw()
   })
@@ -48,20 +47,18 @@ $.get(userList.data('url')).done(data => {
    Filtering
    *********/
   $('#sodar-up-user-list-filter').keyup(function () {
-    const dt = userList.find('table').dataTable().api()
+    const dt = userListCard.find('table').dataTable().api()
     const v = $(this).val()
     dt.search(v)
     dt.draw()
   })
 }).catch(xhr => {
   console.error(xhr)
-  userListTable.html(
+  userListTableBody.html(
     $('<div>', {
       class: 'alert alert-warning',
       role: 'alert'
     })
-    .text(
-      `Error fetching user list: ${xhr.statusText}`
-    )
+    .text(`Error fetching user list: ${xhr.statusText}`)
   )
 })

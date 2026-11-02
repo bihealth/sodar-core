@@ -15,15 +15,14 @@ class UserListAjaxView(SODARBasePermissionAjaxView):
     permission_required = 'userprofile.view_list'
 
     def get(self, request, *args, **kwargs):
-        queryset = User.objects.all()
+        users = User.objects.all().order_by('username')
         res = [
             {
-                'user_html': get_user_html(obj, request),
-                'first_name': obj.first_name,
-                'last_name': obj.last_name,
-                'email': obj.email,
-                'date_joined': localtime(obj.date_joined).strftime('%Y-%m-%d'),
+                'user_html': get_user_html(u, request),
+                'name': u.name,
+                'email': u.email,
+                'date_joined': localtime(u.date_joined).strftime('%Y-%m-%d'),
             }
-            for obj in queryset
+            for u in users
         ]
         return Response(res, 200)

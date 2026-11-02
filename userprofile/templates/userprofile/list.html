@@ -9,14 +9,11 @@
 
 {% block css %}
   {{ block.super }}
-
   <!-- DataTables -->
   {% include 'projectroles/_datatables_css.html' %}
-
-  <!-- General CSS for user profile elements styling -->
-  <link rel="stylesheet" type="text/css" href="{% static 'userprofile/css/userprofile.css' %}">
-
-{% endblock %}
+  <!-- User list styling -->
+  <link rel="stylesheet" type="text/css" href="{% static 'userprofile/css/user_list.css' %}">
+{% endblock css %}
 
 {% block projectroles %}
 
@@ -25,13 +22,13 @@
 </div>
 
 <div class="container-fluid sodar-page-container">
-  <div id="sodar-up-ajax-user-list"
+  <div id="sodar-up-user-list-card"
        class="card sodar-card"
        data-url="{% url 'userprofile:ajax_list' %}"
        data-link-prefix="{% url 'userprofile:detail' %}">
     <div class="card-header">
       <h4>
-        <i class="iconify" data-icon="mdi:account-search"></i>
+        <i class="iconify" data-icon="mdi:account-multiple-outline"></i>
         Site Users
         <div class="input-group sodar-header-input-group pull-right">
           <select class="form-control" id="sodar-up-user-list-page-length">
@@ -42,26 +39,28 @@
             <option value="100">100</option>
             <option value="-1">All</option>
           </select>
-          <input class="form-control"
-                 type="text"
-                 placeholder="Filter"
-                 aria-label="Filter users"
-                 id="sodar-up-user-list-filter" />
+          <input
+              class="form-control"
+              type="text"
+              placeholder="Filter"
+              aria-label="Filter users"
+              id="sodar-up-user-list-filter" />
         </div>
       </h4>
     </div>
     <div class="card-body p-0">
-      <table class="table table-striped sodar-card-table">
+      <table
+          class="table table-striped sodar-card-table"
+          id="sodar-up-user-list-table">
         <thead>
           <tr>
-            <th>Username</th>
-            <th>First Name</th>
-            <th>Last Name</th>
+            <th>User</th>
+            <th>Name</th>
             <th>Email</th>
             <th>Date Joined</th>
           </tr>
         </thead>
-        <tbody id="sodar-up-ajax-user-list-table">
+        <tbody id="sodar-up-user-list-table-body">
         </tbody>
       </table>
       <div id="sodar-up-user-list-spinner" class="w-100 text-center">
@@ -80,7 +79,7 @@
   <!-- DataTables -->
   {% include 'projectroles/_datatables_js.html' %}
   <!-- User list table creation -->
-  <script type="text/javascript" src="{% static 'userprofile/js/list.js' %}"></script>
+  <script type="text/javascript" src="{% static 'userprofile/js/user_list.js' %}"></script>
   <!-- Tour content -->
   <script type="text/javascript">
     tourEnabled = true
@@ -92,8 +91,8 @@
     })
     tour.addStep('user_name', {
       title: 'User Profile Link',
-      text: "Clicking on a username will bring you to that user's public profile.",
-      attachTo: '#sodar-up-ajax-user-list-table tr:nth-child(1) td:nth-child(1) left',
+      text: 'Click on a user name to navigate to that user\'s profile.',
+      attachTo: '#sodar-up-user-list-table-body tr:nth-child(1) td:nth-child(1) left',
       advanceOn: '.docs-link click',
       showCancelLink: true
     })
