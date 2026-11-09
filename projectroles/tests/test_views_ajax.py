@@ -711,6 +711,52 @@ class TestProjectListAjaxView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(pd), 0)
 
+    def test_get_mutual_categories_mixed_public_access(self):
+        """Test GET categories containing both public and mutual projects"""
+        new_category = self.make_project(
+            'NewCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        new_project_mutual = self.make_project(
+            'NewProjectMutual',
+            PROJECT_TYPE_PROJECT,
+            new_category,
+        )
+        new_project_single = self.make_project(
+            'NewProjectSingle',
+            PROJECT_TYPE_PROJECT,
+            new_category,
+        )
+        new_project_public = self.make_project(
+            'NewProjectPublic', PROJECT_TYPE_PROJECT, new_category
+        )
+        user_new = self.make_user('user_new')
+        new_project_public.set_public_access(self.role_guest)
+        self.make_assignment(
+            new_project_single, self.user_owner, self.role_owner
+        )
+        self.make_assignment(
+            new_project_mutual, self.user_owner, self.role_owner
+        )
+        self.make_assignment(new_project_mutual, user_new, self.role_delegate)
+        url = reverse(
+            'projectroles:ajax_project_list_mutual',
+            kwargs={'user': user_new.sodar_uuid},
+        )
+        with self.login(self.user_owner):
+            response = self.client.get(url)
+        pd = response.data['projects']
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['uuid'], str(new_category.sodar_uuid))
+        self.assertEqual(pd[1]['uuid'], str(new_project_mutual.sodar_uuid))
+        with self.login(user_new):
+            response = self.client.get(self.url_mutual_user_owner)
+        pd = response.data['projects']
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(pd), 2)
+        self.assertEqual(pd[0]['uuid'], str(new_category.sodar_uuid))
+        self.assertEqual(pd[1]['uuid'], str(new_project_mutual.sodar_uuid))
+
     def test_get_mutual_finder_cats(self):
         """Test GET mutual with finder role"""
         user_new = self.make_user('user_new')
