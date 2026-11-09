@@ -417,26 +417,27 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         # Categories with public statistics enabled
         pub_stat_cats = self._get_public_stat_cats()
         if target_user and target_user != user:
-            other_projects = set(
-                self._get_projects(target_user, pub_stat_cats, None)
-            )
-            pub_only_projects = set(
-                self._get_public_only_projects(target_user)
-                | self._get_public_only_projects(user)
+            target_projects = self._get_projects(
+                target_user, pub_stat_cats, None
             )
             # Projects both the requesting user and the queried user can access
             projects = [
                 p
                 for p in self._get_projects(user, pub_stat_cats, None)
-                if p in other_projects and p not in pub_only_projects
+                if p in target_projects
             ]
+            # Projects with public only access for either user, no local role
+            pub_only_projects = set(
+                self._get_public_only_projects(user)
+                | self._get_public_only_projects(target_user)
+            )
         else:
             # Projects the requesting user can access
             projects = self._get_projects(user, pub_stat_cats, parent)
+            # Projects with public only access for user, no local role
+            pub_only_projects = self._get_public_only_projects(user)
         # Blocked projects
         blocked_projects = self._get_blocked_projects()
-        # Projects with public only access for user, no local role
-        pub_only_projects = self._get_public_only_projects(user)
         # Projects starred by user
         starred_projects = self._get_starred_projects(user)
         # Titles of categories to which the user has a finder role
