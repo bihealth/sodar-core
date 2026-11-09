@@ -1420,11 +1420,15 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 'perform_project_modify', 'revert_project_modify', args
             )
 
-        # If public access was updated, update has_public_children for parents
+        # If public access was updated, or if the project was created
+        # with public access, update has_public_children for parents
         if (
             old_project
             and project.parent
             and old_project.public_access != project.public_access
+            or not old_project
+            and project.parent
+            and project.public_access
         ):
             try:
                 project._update_public_children()

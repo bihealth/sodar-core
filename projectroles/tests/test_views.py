@@ -1804,6 +1804,26 @@ class TestProjectCreateView(
         )
         self.assertEqual(Project.objects.count(), 1)
 
+    def test_post_project_public_access(self):
+        """Test POST with public access"""
+        self.assertEqual(self.category.has_public_children, False)
+        data = self.get_project_create_data(
+            title=PROJECT_TITLE,
+            project_type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=self.user,
+        )
+        data['public_access'] = self.role_guest.pk
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.count(), 2)
+        project = Project.objects.get(title=PROJECT_TITLE)
+        self.assertEqual(project.public_access, self.role_guest)
+        self.category.refresh_from_db()
+        # Assert the parent category has_public_children is set true
+        self.assertEqual(self.category.has_public_children, True)
+
 
 class TestProjectUpdateView(
     ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, UIViewTestBase
