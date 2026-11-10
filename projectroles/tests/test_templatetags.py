@@ -1,6 +1,5 @@
 """Tests for template tags in the projectroles app"""
 
-import mistune
 import uuid
 
 from importlib import import_module
@@ -677,13 +676,6 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         )
 
     # TODO: Test get_remote_icon() (need to set up remote projects)
-
-    def test_render_markdown(self):
-        """Test render_markdown()"""
-        raw_md = '**Some markdown**'
-        self.assertEqual(
-            c_tags.render_markdown(raw_md), mistune.markdown(raw_md)
-        )
 
     def test_force_wrap(self):
         """Test force_wrap()"""

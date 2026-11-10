@@ -1,7 +1,5 @@
 """Template tags provided by projectroles for use in other apps"""
 
-import mistune
-
 from importlib import import_module
 import logging
 from typing import Any, Optional, Union
@@ -489,17 +487,6 @@ def get_remote_icon(project: Project, user: User) -> str:
                 )
             )
     return ''
-
-
-@register.simple_tag
-def render_markdown(raw_markdown: str) -> str | list | dict:
-    """Markdown field rendering helper"""
-    logger.warning(
-        'The render_markdown template tag is deprecated and will be removed '
-        'in v1.5. Please use the safe_markdown filter from the martor package '
-        'instead.'
-    )
-    return mistune.html(raw_markdown)
 
 
 @register.filter
