@@ -193,6 +193,10 @@ The following settings can be used to configure martor:
         'spellcheck': env.str('MARTOR_ENABLE_CONFIG_SPELLCHECK', 'false'),
         'hljs': env.str('MARTOR_ENABLE_CONFIG_HLJS', 'false'),
     }
+    MARTOR_PREVIEW_PLACEHOLDER = env.str(
+        'MARTOR_PREVIEW_PLACEHOLDER',
+        'Markdown preview',
+    )
     MARTOR_ALTERNATIVE_CSS_FILE_THEME = env.str(
         'MARTOR_ALTERNATIVE_CSS_FILE_THEME',
         'projectroles/css/projectroles.css',

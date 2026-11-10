@@ -332,6 +332,10 @@ MARTOR_ENABLE_CONFIGS = {
     'spellcheck': env.str('MARTOR_ENABLE_CONFIG_SPELLCHECK', 'false'),
     'hljs': env.str('MARTOR_ENABLE_CONFIG_HLJS', 'false'),
 }
+MARTOR_PREVIEW_PLACEHOLDER = env.str(
+    'MARTOR_PREVIEW_PLACEHOLDER',
+    'Markdown preview',
+)
 # By default, martor loads bootstrap v5. We don't want that, so we supply an
 # alternative CSS file.
 MARTOR_ALTERNATIVE_CSS_FILE_THEME = env.str(
