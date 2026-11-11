@@ -1041,6 +1041,19 @@ class UITestMixin:
         elem = self.selenium.find_element(by, value)
         self.assertEqual(elem.is_displayed(), expected)
 
+    def wait_for_icon_update(self):
+        """
+        Wait for iconify to update icons into SVG.
+        """
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located(
+                (By.XPATH, '//*[name()="svg" and @class="iconify"]')
+            )
+        )  # Find updated SVGs
+        WebDriverWait(self.selenium, self.wait_time).until_not(
+            ec.presence_of_element_located((By.XPATH, '//i[@class="iconify"]'))
+        )  # Ensure all has been updated
+
 
 class SearchUITestMixin:
     """Helper mixin for search results UI tests"""

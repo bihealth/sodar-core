@@ -424,6 +424,7 @@ class TestHomeView(ProjectUITestBase):
             validate=False,
         )
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self.wait_for_icon_update()
         self.assertEqual(self._get_item_vis_count(), 2)
         button = self.selenium.find_element(
             By.ID, 'sodar-pr-project-list-link-star'
@@ -581,6 +582,8 @@ class TestHomeView(ProjectUITestBase):
     def test_project_list_title(self):
         """Test project list title rendering"""
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self.wait_for_icon_update()
+
         row = self._get_project_row(self.project)
         icon = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-title-container'
@@ -595,6 +598,7 @@ class TestHomeView(ProjectUITestBase):
             + f'<strong>{self.project.title}</strong>'
         )
         self.assertEqual(link_html.get_attribute('innerHTML'), expected)
+
         # Assert no extra icons are present
         title = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-list-title-td'
@@ -629,6 +633,7 @@ class TestHomeView(ProjectUITestBase):
     def test_project_list_title_category(self):
         """Test project list title rendering with category"""
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self.wait_for_icon_update()
         row = self._get_project_row(self.category)
         icon = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-title-container'
@@ -2571,13 +2576,11 @@ class TestProjectCreateView(RemoteSiteMixin, ProjectUITestBase):
     def test_settings_label_icon(self):
         """Test rendering of app settings icon for project creation"""
         self.login_and_redirect(self.superuser, self.url)
+        self.wait_for_icon_update()
         select = Select(
             self.selenium.find_element(By.CSS_SELECTOR, PROJECT_SELECT_CSS)
         )
         select.select_by_value(PROJECT_TYPE_PROJECT)
-        WebDriverWait(self.selenium, 10).until(
-            ec.presence_of_element_located((By.TAG_NAME, 'svg'))
-        )
         find_args = (By.CSS_SELECTOR, f'div[id="{PROJECT_SETTING_ID}"]')
         logo = self.selenium.find_element(*find_args).find_element(
             By.TAG_NAME, 'svg'

@@ -27,6 +27,7 @@ Added
     - ``project_list_public_display`` app setting (#2007)
     - ``get_user_html()`` and ``get_user_badge()`` user profile linking (#1999)
     - ``PROJECTROLES_USER_PROFILE_LINK`` Django setting (#1999)
+    - ``wait_for_icon_update()`` UI test helper (#1998)
 - **Timeline**
     - ``TimelineEvent`` ``core_version`` and ``site_version`` fields (#1963)
 - **Userprofile**
