@@ -101,7 +101,13 @@ html,
 
 nav.sodar-base-navbar {
   padding-left: 28px;
-  padding-right: 38px;
+  padding-right: 42px;
+}
+/* HACK: Fix invalid padding in Chrome caused by BS4 dropdowns and overflow-y */
+@supports (-moz-appearance: none) {
+  nav.sodar-base-navbar {
+    padding-right: 28px;
+  }
 }
 
 nav.sodar-base-navbar ul li.nav-item {
@@ -537,22 +543,23 @@ a.sodar-pr-btn-copy-secret i {
   word-break: break-word;
 }
 
-.sodar-pr-project-header-btn {
+#sodar-pr-sidebar-alt-btn {
+  margin-right: 12px;
+  z-index: 1100;
+}
+
+.sodar-pr-content-header-btn {
+  line-height: 16px;
   height: 30px;
   font-size: 100%;
 }
 
-.sodar-pr-project-header-btn a {
+.sodar-pr-content-header-btn a {
   line-height: 22px;
 }
 
-.sodar-pr-project-header-btn button svg {
+.sodar-pr-content-header-btn button svg {
   margin-top: 2px !important;
-}
-
-#sodar-pr-sidebar-alt-btn {
-  margin-right: 12px;
-  z-index: 1100;
 }
 
 #sodar-pr-project-ops-btn {

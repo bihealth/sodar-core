@@ -5,10 +5,11 @@
   <div class="card-header">
     <h4>
       {% if other_user %}
-        <i class="iconify" data-icon="mdi:account-supervisor"></i>
         {% if request.user.is_superuser %}
-          {{ other_user.username }}'s
+          <i class="iconify" data-icon="mdi:earth"></i>
+          User
         {% elif request.user.is_authenticated %}
+          <i class="iconify" data-icon="mdi:account-supervisor"></i>
           Mutual
         {% endif %}
       {% elif not parent %}

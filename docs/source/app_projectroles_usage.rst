@@ -35,7 +35,7 @@ provider.
 
 .. figure:: _static/app_projectroles/sodar_login.png
     :align: center
-    :scale: 75%
+    :scale: 80%
 
     SODAR Core login form
 
@@ -66,7 +66,7 @@ the general view of your site is split into the following elements:
 
 .. figure:: _static/app_projectroles/sodar_user_dropdown.png
     :align: center
-    :scale: 75%
+    :scale: 80%
 
     User dropdown
 
@@ -111,7 +111,7 @@ the category and its possible subcategories.
 
 .. figure:: _static/app_projectroles/sodar_project_detail.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Project detail view
 
@@ -175,7 +175,7 @@ may be modified later.
 
 .. figure:: _static/app_projectroles/sodar_category_create.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Category/project creation form
 
@@ -204,7 +204,7 @@ the target category or superuser status.
 
 .. figure:: _static/app_projectroles/sodar_project_update.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Category/project updating form
 
@@ -340,7 +340,7 @@ the project update view, now labeled :guilabel:`Unarchive`.
 
 .. figure:: _static/app_projectroles/sodar_archive.png
     :align: center
-    :scale: 65%
+    :scale: 60%
 
     Archived project and unarchive button in project update view
 
@@ -363,7 +363,7 @@ more information, see :ref:`app_projectroles_usage_remote`.
 
 .. figure:: _static/app_projectroles/sodar_project_delete.png
     :align: center
-    :scale: 65%
+    :scale: 60%
 
     Project deletion confirmation form
 
@@ -520,7 +520,7 @@ project creation and updating view.
 
 .. figure:: _static/app_projectroles/site_app_settings.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Site app settings view
 
@@ -570,7 +570,7 @@ based site.
 
 .. figure:: _static/app_projectroles/sodar_remote_sites.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Remote site list in source mode
 
@@ -630,7 +630,7 @@ target site will sync the data by sending a request to the source site.
 
 .. figure:: _static/app_projectroles/sodar_remote_projects.png
     :align: center
-    :scale: 50%
+    :scale: 55%
 
     Remote project list viewed as a source site
 
@@ -718,7 +718,7 @@ such.
 
 .. figure:: _static/app_projectroles/sodar_remote_project_links.png
     :align: center
-    :scale: 75%
+    :scale: 60%
 
     Remote project links in the project detail view
 

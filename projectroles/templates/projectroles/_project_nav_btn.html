@@ -6,7 +6,7 @@
 {% get_django_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
 {% has_perm 'projectroles.view_project_roles' request.user project as can_view_roles %}
 
-<div class="btn-group sodar-pr-project-header-btn pull-left collapse"
+<div class="btn-group sodar-pr-content-header-btn pull-left collapse"
      role="group"
      id="sodar-pr-sidebar-alt-btn">
   <button class="btn btn-secondary dropdown-toggle btn-sm"

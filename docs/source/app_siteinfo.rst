@@ -92,7 +92,7 @@ Settings
 
 .. figure:: _static/app_siteinfo/site_info.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Siteinfo application with the General tab selected
 
