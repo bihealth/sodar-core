@@ -75,7 +75,7 @@ General Python Dependencies
     ``requirements`` directory for up-to-date package versions and upgrade your
     project.
 Django Version
-    The minimum Django version has been bumped to v5.2.18.
+    The minimum Django version has been bumped to v5.2.19.
 
 App Settings API Project Type Checks Fixed
 ------------------------------------------
