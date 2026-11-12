@@ -401,8 +401,6 @@ $(document).ready(function () {
       }
     }
 
-    console.log('projectCount=' + projectCount)
-
     // Enable controls
     if (publicCount > 0 && publicCount < projectCount) {
       $('#sodar-pr-project-list-link-public').prop('disabled', false)

@@ -36,15 +36,6 @@ The userprofile app is available for your Django site after installing
         'userprofile.apps.UserprofileConfig',
     ]
 
-Optional Settings
------------------
-
-When a user is mentioned on the site, for example in timeline events
-or in project members views, the user's name links to their public
-profile. If you don't want this behaviour, you can disable it by setting
-``PROJECTROLES_USER_PROFILE_LINK = False``, as documented in the
-:ref:`projectroles settings <app_projectroles_settings>` page.
-
 URL Configuration
 -----------------
 
@@ -79,12 +70,12 @@ Usage
 =====
 
 After successful installation, two additional links should be available in the
-user dropdown menu in the top-right corner of the website UI after you have
-logged in:
+user dropdown menu:
 
-- The :guilabel:`User Profile` link, which directs you to your own profile;
-- The :guilabel:`User List` link, which brings you to a list of all users.
-
+:guilabel:`User Profile`
+    Link to your own user profile.
+:guilabel:`User List`
+    List of all users on the site.
 
 User Profile
 ------------
@@ -99,12 +90,14 @@ user details. The last option is only available for local Django user accounts.
 
     User details view
 
-If you are viewing the public profile of another user, the same view will
-be shown, except for the button to update settings and the additional email
-addresses. Additionally, a list of the projects you have in common will be
-displayed. When the superuser views a user's public profile, the additional
-email addresses are still shown, and the project list contains all the projects
-to which the user has access.
+If you are viewing the profile of another user, the same view will be shown
+with some differences. Updating actions or additional emails will not be
+available. In addition to user details, a list of mutually accessible projects
+between the viewed user and you will be displayed.
+
+Viewing another user's profile as a superuser, additional email addresses will
+be displayed and the project list contains all the projects to which the user
+has access.
 
 
 User Settings

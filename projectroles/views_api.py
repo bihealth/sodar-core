@@ -486,8 +486,8 @@ class ProjectRetrieveAPIView(
     - ``description``: Project description (string)
     - ``full_title``: Full project title with parent categories (string)
     - ``parent``: Parent category UUID (string or null)
-    - ``readme``: Project readme (string, supports markdown)
     - ``public_access``: Read-only access for all users (role name as string or None)
+    - ``readme``: Project readme (string, supports markdown)
     - ``roles``: Project role assignments (dict, assignment UUID as key)
     - ``sodar_uuid``: Project UUID (string)
     - ``title``: Project title (string)
@@ -637,6 +637,14 @@ class ProjectDestroyAPIView(
             self.handle_delete(instance, self.request)
 
 
+@extend_schema(
+    responses={
+        '200': inline_serializer(
+            'ProjectUUIDGetResponse',
+            fields={'project_uuid': serializers.CharField()},
+        )
+    }
+)
 class ProjectUUIDRetrieveAPIView(ProjectrolesAPIVersioningMixin, APIView):
     """
     Retrieve a project or category UUID by its title slug.
@@ -964,9 +972,9 @@ class ProjectInviteRetrieveAPIView(
 
     - ``date_created``: Creation datetime string (YYYY-MM-DDThh:mm:ssZ)
     - ``date_expire``: Expiry datetime string (YYYY-MM-DDThh:mm:ssZ)
-    - ``message``: Optional invite message (string)
-    - ``issuer``: UUID of issuing user (string)
     - ``email``: Email of invited user (string)
+    - ``issuer``: UUID of issuing user (string)
+    - ``message``: Optional invite message (string)
     - ``project``: Project UUID (string)
     - ``role``: Role for invided user (string, e.g. "project contributor")
     - ``sodar_uuid``: Invite UUID (string)
@@ -1281,13 +1289,13 @@ class ProjectSettingRetrieveAPIView(
 
     **Returns:**
 
+    - ``name``: Setting name (string)
     - ``plugin_name``: Name of app plugin for the setting (string)
     - ``project``: Project UUID or None
-    - ``user``: User UUID or None
-    - ``name``: Setting name (string)
     - ``type``: Setting type (string)
-    - ``value``: Setting value
+    - ``user``: User UUID or None
     - ``user_modifiable``: Modifiable by user (boolean)
+    - ``value``: Setting value
 
     **Version Changes:**
 
@@ -1493,13 +1501,13 @@ class UserSettingRetrieveAPIView(
 
     **Returns:**
 
+    - ``name``: Setting name (string)
     - ``plugin_name``: Name of app plugin for the setting (string)
     - ``project``: None
-    - ``user``: User UUID
-    - ``name``: Setting name (string)
     - ``type``: Setting type (string)
-    - ``value``: Setting value
+    - ``user``: User UUID
     - ``user_modifiable``: Modifiable by user (boolean)
+    - ``value``: Setting value
 
     **Version Changes:**
 

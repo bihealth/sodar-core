@@ -9,7 +9,7 @@
 <div class="row sodar-pr-content-title">
   {# Project navigation dropdown #}
   {# Only visible if browser width < X and sidebar is hidden #}
-  {% include 'projectroles/_project_nav_btn.html' %}
+  {% include 'projectroles/_project_nav_dropdown.html' %}
 
   <h2 class="sodar-pr-content-title mr-2">{{ project.title }}</h2>
 
@@ -66,7 +66,7 @@
   </span>
 
   {# Project operations dropdown #}
-  {% include 'projectroles/_project_ops_btn.html' %}
+  {% include 'projectroles/_project_ops_dropdown.html' %}
 </div>
 
 {% get_display_name project.type as project_display %}

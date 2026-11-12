@@ -333,8 +333,7 @@ MARTOR_ENABLE_CONFIGS = {
     'hljs': env.str('MARTOR_ENABLE_CONFIG_HLJS', 'false'),
 }
 MARTOR_PREVIEW_PLACEHOLDER = env.str(
-    'MARTOR_PREVIEW_PLACEHOLDER',
-    'Markdown preview',
+    'MARTOR_PREVIEW_PLACEHOLDER', 'Markdown preview'
 )
 # By default, martor loads bootstrap v5. We don't want that, so we supply an
 # alternative CSS file.

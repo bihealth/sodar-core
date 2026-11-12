@@ -72,7 +72,9 @@ class UserDetailView(
     ProjectListContextMixin,
     TemplateView,
 ):
-    """Display the user profile view including the user settings
+    """
+    User profile view containing user details, settings, alternative emails and
+    projects.
 
     This view can be accessed by other users than the profile owner, in which
     case editing is disabled, settings are not shown, and additional emails are

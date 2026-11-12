@@ -68,7 +68,6 @@ django-rest-knox>=5.1.0, <5.2
 markdown==3.10.3
 # Replaced by Martor, still needed for migrations. To be removed in v2.1.
 django-markupfield>=2.0.1, <2.1
-mistune>=3.3.4, <3.4
 martor>=1.8.6, <1.9
 
 # Database file storage for filesfolders

@@ -497,7 +497,7 @@ class TestHomeView(ProjectUITestBase):
         self.assertEqual(button.is_enabled(), False)  # Should be disabled
 
     def test_project_list_public_access(self):
-        """Test project list public access button with public project and access"""
+        """Test public access button with public project and access"""
         self.project.public_access = self.role_guest
         self.project.save()
         self.assertEqual(
@@ -511,7 +511,7 @@ class TestHomeView(ProjectUITestBase):
         self.assertEqual(button.is_enabled(), False)  # Should still be disabled
 
     def test_project_list_public_no_access(self):
-        """Test project list public access button with public project and no explicit access"""
+        """Test public access button with public project and no explicit access"""
         self.project.public_access = self.role_guest
         self.project.save()
         self.assertEqual(
@@ -528,7 +528,7 @@ class TestHomeView(ProjectUITestBase):
         self.assertEqual(button.is_enabled(), False)
 
     def test_project_list_public_mixed_access(self):
-        """Test project list public access button with public project and mixed access"""
+        """Test public access button with public project and mixed access"""
         self.project.public_access = self.role_guest
         self.project.save()
         category2 = self.make_project(

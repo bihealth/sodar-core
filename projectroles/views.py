@@ -28,8 +28,8 @@ from django.views.generic import (
     DeleteView,
     View,
 )
+from django.views.generic.base import ContextMixin
 from django.views.generic.edit import ModelFormMixin, FormView
-from django.views.generic.detail import ContextMixin
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
@@ -605,6 +605,61 @@ class ProjectListContextMixin:
             APP_NAME, 'project_list_public_display', user=user
         )
         return context
+
+
+# Base Views -------------------------------------------------------------------
+
+
+class HostConfirmDeleteView(
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    HTTPRefererMixin,
+    DeleteView,
+):
+    """
+    Specialized deletion view with confirmation form asking for host name.
+
+    Set allow_delete=False in context data to display form but prohibit
+    deletion.
+    """
+
+    #: Custom override for this view's template
+    template_name = 'projectroles/confirm_delete_host.html'
+
+    #: URL for redirection after a successful deletion
+    success_url = reverse_lazy('home')
+
+    def get_object_display_name(self) -> str:
+        """Define a display name for the type of object"""
+        object = self.get_object()
+        return object.__class__.__name__
+
+    def get_context_data(self, *args, **kwargs):
+        """Override get_context_data()"""
+        context = super().get_context_data(*args, **kwargs)
+        context['object_display_name'] = self.get_object_display_name()
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        """Override dispatch() to check for correct host name before POST"""
+        if request.method == 'POST':
+            # Don't allow deletion unless user has input the host name
+            host_confirm = request.POST.get('delete_host_confirm')
+            actual_host = request.get_host().split(':')[0]
+            if not host_confirm or host_confirm != actual_host:
+                display_name = self.get_object_display_name()
+                msg = (
+                    f'Incorrect host name for confirming {display_name} '
+                    f'deletion: "{host_confirm}"'
+                )
+                logger.error(msg + f' (correct={actual_host})')
+                messages.error(
+                    request,
+                    f'Failed to delete {display_name}: Host name input '
+                    'incorrect.',
+                )
+                return redirect(request.path)
+        return super().dispatch(request, *args, **kwargs)
 
 
 # General Views ----------------------------------------------------------------
@@ -1884,58 +1939,6 @@ class ProjectArchiveView(
         except Exception as ex:
             messages.error(request, f'Failed to alert users: {ex}')
         return redirect(redirect_url)
-
-
-class HostConfirmDeleteView(
-    LoginRequiredMixin,
-    LoggedInPermissionMixin,
-    HTTPRefererMixin,
-    DeleteView,
-):
-    """
-    Specialized deletion view with confirmation form asking for host name.
-
-    Set allow_delete=False in context data to display form but prohibit
-    deletion.
-    """
-
-    #: Custom override for this view's template
-    template_name = 'projectroles/confirm_delete_host.html'
-
-    #: URL for redirection after a successful deletion
-    success_url = reverse_lazy('home')
-
-    def get_object_display_name(self) -> str:
-        """Define a display name for the type of object"""
-        object = self.get_object()
-        return object.__class__.__name__
-
-    def get_context_data(self, *args, **kwargs):
-        """Override get_context_data()"""
-        context = super().get_context_data(*args, **kwargs)
-        context['object_display_name'] = self.get_object_display_name()
-        return context
-
-    def dispatch(self, request, *args, **kwargs):
-        """Override dispatch() to check for correct host name before POST"""
-        if request.method == 'POST':
-            # Don't allow deletion unless user has input the host name
-            host_confirm = request.POST.get('delete_host_confirm')
-            actual_host = request.get_host().split(':')[0]
-            if not host_confirm or host_confirm != actual_host:
-                display_name = self.get_object_display_name()
-                msg = (
-                    f'Incorrect host name for confirming {display_name} '
-                    f'deletion: "{host_confirm}"'
-                )
-                logger.error(msg + f' (correct={actual_host})')
-                messages.error(
-                    request,
-                    f'Failed to delete {display_name}: Host name input '
-                    'incorrect.',
-                )
-                return redirect(request.path)
-        return super().dispatch(request, *args, **kwargs)
 
 
 class ProjectDeleteView(

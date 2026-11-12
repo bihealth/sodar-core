@@ -315,8 +315,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
         with self.login(self.user):
             response = self.client.get(self.url)
             self.assertEqual(
-                response.context['sidebar_icon_size'],
-                SIDEBAR_ICON_MIN_SIZE,
+                response.context['sidebar_icon_size'], SIDEBAR_ICON_MIN_SIZE
             )
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MAX_SIZE + 2)
@@ -325,8 +324,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
         with self.login(self.user):
             response = self.client.get(self.url)
             self.assertEqual(
-                response.context['sidebar_icon_size'],
-                SIDEBAR_ICON_MAX_SIZE,
+                response.context['sidebar_icon_size'], SIDEBAR_ICON_MAX_SIZE
             )
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MIN_SIZE)
@@ -402,6 +400,11 @@ class TestProjectSearchResultsView(
 ):
     """Tests for ProjectSearchResultsView"""
 
+    @classmethod
+    def _get_url(cls, query: dict):
+        """Return URL with search query"""
+        return reverse('projectroles:search') + '?' + urlencode(query)
+
     def setUp(self):
         super().setUp()
         self.category = self.make_project(
@@ -415,9 +418,7 @@ class TestProjectSearchResultsView(
     def test_get(self):
         """Test ProjectSearchResultsView GET"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
-            )
+            response = self.client.get(self._get_url({'s': 'test'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {})
@@ -431,11 +432,7 @@ class TestProjectSearchResultsView(
     def test_get_quoted(self):
         """Test GET with quoted search term"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': '"test quoted"'})
-            )
+            response = self.client.get(self._get_url({'s': '"test quoted"'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test quoted'])
         self.assertEqual(response.context['search_keywords'], {})
@@ -449,11 +446,7 @@ class TestProjectSearchResultsView(
     def test_get_search_type(self):
         """Test GET with search type"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test type:file'})
-            )
+            response = self.client.get(self._get_url({'s': 'test type:file'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {'type': 'file'})
@@ -472,9 +465,7 @@ class TestProjectSearchResultsView(
         """Test GET with keywords"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': f'test project:{self.project.sodar_uuid}'})
+                self._get_url({'s': f'test project:{self.project.sodar_uuid}'})
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
@@ -500,21 +491,17 @@ class TestProjectSearchResultsView(
         """Test GET with quoted keywords"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test "test quoted" project:"white space"'})
+                self._get_url({'s': 'test "test quoted" project:"white space"'})
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context['search_terms'], ['test', 'test quoted']
         )
         self.assertEqual(
-            response.context['search_keywords'],
-            {'project': 'white space'},
+            response.context['search_keywords'], {'project': 'white space'}
         )
         self.assertEqual(
-            response.context['keyword_input'],
-            'project:white space',
+            response.context['keyword_input'], 'project:white space'
         )
         self.assertEqual(
             response.context['search_input'],
@@ -530,9 +517,7 @@ class TestProjectSearchResultsView(
         """Test GET with project keyword title value"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': f'test project:"{self.project.title}"'})
+                self._get_url({'s': f'test project:"{self.project.title}"'})
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
@@ -541,8 +526,7 @@ class TestProjectSearchResultsView(
             {'project': self.project.title.lower()},
         )
         self.assertEqual(
-            response.context['keyword_input'],
-            f'project:{self.project.title}',
+            response.context['keyword_input'], f'project:{self.project.title}'
         )
         self.assertEqual(
             response.context['search_input'],
@@ -558,9 +542,7 @@ class TestProjectSearchResultsView(
         """Test GET with project keywoard title value for category"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': f'test project:"{self.category.title}"'})
+                self._get_url({'s': f'test project:"{self.category.title}"'})
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
@@ -584,19 +566,12 @@ class TestProjectSearchResultsView(
 
     def test_get_search_string_parsing(self):
         """Test GET search string parsing with complex input"""
+        s = (
+            'key1:value1  "term with spaces"\t'
+            'key2:"value2 with spaces"\t term2\n"key3:value3"'
+        )
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode(
-                    {
-                        's': (
-                            'key1:value1  "term with spaces"\t'
-                            'key2:"value2 with spaces"\t term2\n"key3:value3"'
-                        )
-                    }
-                )
-            )
+            response = self.client.get(self._get_url({'s': s}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context['search_terms'], ['term with spaces', 'term2']
@@ -623,13 +598,9 @@ class TestProjectSearchResultsView(
         )
 
     def test_get_keyword_missing(self):
-        """Test GET with incomplete keyword missing the value"""
+        """Test GET with value missing from keyword"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test project:'})
-            )
+            response = self.client.get(self._get_url({'s': 'test project:'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {'project': ''})
@@ -637,12 +608,10 @@ class TestProjectSearchResultsView(
         self.assertEqual(response.context['search_input'], 'test project:')
 
     def test_get_upper_case_terms(self):
-        """Test GET with incomplete keyword missing the value"""
+        """Test GET with upper case terms"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': f'Test Project:{self.project.title}'})
+                self._get_url({'s': f'Test Project:{self.project.title}'})
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['Test'])
@@ -659,7 +628,7 @@ class TestProjectSearchResultsView(
         )
 
     def test_get_non_text_input(self):
-        """Test GET with non-text input from standard search (should redirect)"""
+        """Test GET with non-text input from standard search"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:search') + '?s=+++'
@@ -670,26 +639,18 @@ class TestProjectSearchResultsView(
     def test_get_disabled(self):
         """Test GET with disabled search"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
-            )
+            response = self.client.get(self._get_url({'s': 'test'}))
             self.assertRedirects(response, reverse('home'))
 
     def test_get_omit_app(self):
         """Test GET with omitted app"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
-            )
+            response = self.client.get(self._get_url({'s': 'test'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['search_apps']), 3)
         with override_settings(PROJECTROLES_SEARCH_OMIT_APPS=['timeline']):
             with self.login(self.user):
-                response = self.client.get(
-                    reverse('projectroles:search')
-                    + '?'
-                    + urlencode({'s': 'test'})
-                )
+                response = self.client.get(self._get_url({'s': 'test'}))
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.context['search_apps']), 2)
             self.assertNotIn(
@@ -701,26 +662,20 @@ class TestProjectSearchResultsView(
         """Test GET with invalid type"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test type:Jaix1au'})
+                self._get_url({'s': 'test type:Jaix1au'})
             )
             self.assertEqual(response.context['search_apps'], [])
 
     def test_get_no_terms(self):
         """Test GET with no search terms"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': ''})
-            )
+            response = self.client.get(self._get_url({'s': ''}))
             self.assertRedirects(response, reverse('home'))
 
     def test_post_wrong_payload(self):
-        """Test ProjectSearchView POST with wrong payload"""
+        """Test POST with wrong payload"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'m': 'test'})
-            )
+            response = self.client.get(self._get_url({'m': 'test'}))
             # Search views take either GET with 's' parameter or POST
             # with 'm' and 'k' parameters. Hence, GET with 'm' parameter
             # results in redirection.
@@ -730,25 +685,28 @@ class TestProjectSearchResultsView(
 class TestProjectAdvancedSearchView(UIViewTestBase):
     """Tests for ProjectAdvancedSearchView"""
 
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:search_advanced')
+
     def test_get(self):
         """Test ProjectAdvancedSearchView GET"""
         with self.login(self.user):
-            response = self.client.get(reverse('projectroles:search_advanced'))
+            response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
 
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
     def test_get_disabled(self):
         """Test GET with disabled search"""
         with self.login(self.user):
-            response = self.client.get(reverse('projectroles:search_advanced'))
+            response = self.client.get(self.url)
             self.assertRedirects(response, reverse('home'))
 
     def test_post(self):
-        """Test POST ProjectAdvancedSearchView"""
+        """Test POST"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={'m': 'cats\r\ndogs', 'k': 'type:project'},
+                self.url, data={'m': 'cats\r\ndogs', 'k': 'type:project'}
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['cats', 'dogs'])
@@ -760,14 +718,14 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
     def test_post_disabled(self):
         """Test POST with disabled search"""
         with self.login(self.user):
-            response = self.client.post(reverse('projectroles:search_advanced'))
+            response = self.client.post(self.url)
             self.assertRedirects(response, reverse('home'))
 
     def test_post_with_search_type_and_keywords(self):
         """Test POST with keywords"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
+                self.url,
                 data={
                     'm': 'testcategory\r\ntestproject\r\nxxx',
                     'k': 'type:project project:title',
@@ -790,8 +748,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test POST with short term (< 3 characters)"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={'m': 'testproject\r\nxx', 'k': ''},
+                self.url, data={'m': 'testproject\r\nxx', 'k': ''}
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['testproject'])
@@ -801,8 +758,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test POST with empty term (should be ignored)"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={'m': 'testproject\r\nxxx\r\n', 'k': ''},
+                self.url, data={'m': 'testproject\r\nxxx\r\n', 'k': ''}
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -814,8 +770,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test POST with duplicate term"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={'m': 'xxx\r\nxxx', 'k': ''},
+                self.url, data={'m': 'xxx\r\nxxx', 'k': ''}
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['xxx'])
@@ -824,7 +779,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test POST with duplicate keyword term"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
+                self.url,
                 data={'m': 'testproject', 'k': 'project:UUID1 project:UUID2'},
             )
         self.assertEqual(response.status_code, 200)
@@ -842,8 +797,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test POST with invalid UUID for project keyword"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={'m': 'xxx', 'k': 'project:NOT_A_UUID'},
+                self.url, data={'m': 'xxx', 'k': 'project:NOT_A_UUID'}
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['xxx'])
@@ -855,10 +809,10 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         )
 
     def test_post_advanced_search_string_parsing(self):
-        """Test POST with a challenging string"""
+        """Test POST with challenging string"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
+                self.url,
                 data={
                     'm': 'test with spaces\r\ntestproject\r\nxxx',
                     'k': 'type:project project:"project with spaces"',
@@ -886,7 +840,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test POST from ProjectAdvancedSearchView with quoted search terms"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
+                self.url,
                 data={
                     'm': 'alert test\r\n"alert test"',
                     'k': '',
@@ -902,7 +856,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test POST with invalid keyword input (missing colon)"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
+                self.url,
                 data={
                     'm': 'test',
                     'k': 'type:project project',

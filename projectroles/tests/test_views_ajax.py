@@ -346,7 +346,7 @@ class TestProjectListAjaxView(
         self.assertEqual(pd[1]['public_only'], True)
 
     def test_get_public_access_superuser(self):
-        """Test GET with public read-only access and superuser"""
+        """Test GET with public access and superuser"""
         self.project.public_access = self.role_guest
         self.project.save()
         with self.login(self.user):
@@ -360,7 +360,7 @@ class TestProjectListAjaxView(
         self.assertEqual(pd[1]['public_only'], True)  # Project
 
     def test_get_public_access_no_role(self):
-        """Test GET with public read-only access and user with no roles"""
+        """Test GET with public access and user with no roles"""
         self.project.public_access = self.role_guest
         self.project.save()
         with self.login(self.user_no_roles):
@@ -374,7 +374,7 @@ class TestProjectListAjaxView(
         self.assertEqual(pd[1]['public_only'], True)  # Public only for project
 
     def test_get_public_access_role(self):
-        """Test GET with public read-only access and user with role"""
+        """Test GET with public access and user with role"""
         self.project.public_access = self.role_guest
         self.project.save()
         user_contributor = self.make_user('user_contributor')
@@ -392,7 +392,7 @@ class TestProjectListAjaxView(
         self.assertEqual(pd[1]['public_only'], False)  # Also local access
 
     def test_get_public_access_role_inherit(self):
-        """Test GET with public read-only access and user with inherited role"""
+        """Test GET with public access and user with inherited role"""
         self.project.public_access = self.role_guest
         self.project.save()
         with self.login(self.user_contributor_cat):
@@ -484,7 +484,7 @@ class TestProjectListAjaxView(
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_get_public_access_anon(self):
-        """Test GET with public read-only access and anonymous user"""
+        """Test GET with public access and anonymous user"""
         self.project.public_access = self.role_guest
         self.project.save()
         response = self.client.get(self.url)

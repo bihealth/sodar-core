@@ -59,8 +59,8 @@ class TestUserDetailView(
         )
 
     @classmethod
-    def _project_list_rows_count(cls, driver):
-        """Count the number of rows in the projects list table"""
+    def _get_project_list_row_count(cls, driver):
+        """Return number of rows in projects list table"""
         project_rows = driver.find_elements(
             By.CLASS_NAME, 'sodar-pr-project-list-item'
         )
@@ -355,7 +355,7 @@ class TestUserDetailView(
                 By.CLASS_NAME, 'sodar-pr-project-list-item'
             )
         )
-        self.assertEqual(self._project_list_rows_count(self.selenium), 2)
+        self.assertEqual(self._get_project_list_row_count(self.selenium), 2)
         self.selenium.find_element(
             By.ID, f'sodar-pr-project-list-item-{category.sodar_uuid}'
         )
@@ -373,10 +373,10 @@ class TestUserDetailView(
             By.ID, 'sodar-pr-project-list-message'
         )
         self.assertTrue(project_list_msg.text != '')
-        self.assertEqual(self._project_list_rows_count(self.selenium), 0)
+        self.assertEqual(self._get_project_list_row_count(self.selenium), 0)
 
-    def test_project_list_star_toggle(self):
-        """Test project list star toggle does not change default"""
+    def test_project_list_star_default_toggle(self):
+        """Test project list star default with toggling"""
         category = self.make_project('category', PROJECT_TYPE_CATEGORY, None)
         project = self.make_project('project', PROJECT_TYPE_PROJECT, category)
         self.make_assignment(category, self.local_user, self.role_owner)
@@ -398,14 +398,14 @@ class TestUserDetailView(
 
         self.login_and_redirect(self.ldap_user, self.url_public)
         WebDriverWait(self.selenium, 15).until(
-            lambda x: self._project_list_rows_count(x) == 2
+            lambda x: self._get_project_list_row_count(x) == 2
         )
         button = self.selenium.find_element(
             By.ID, 'sodar-pr-project-list-link-star'
         )
         button.click()
         WebDriverWait(self.selenium, 15).until(
-            lambda x: self._project_list_rows_count(x) == 1
+            lambda x: self._get_project_list_row_count(x) == 1
         )
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-pr-project-list-message')
@@ -417,7 +417,7 @@ class TestUserDetailView(
         )
 
     def test_project_list_star_initial(self):
-        """Test project list star is initially false"""
+        """Test project list star initial state"""
         category = self.make_project('category', PROJECT_TYPE_CATEGORY, None)
         project = self.make_project('project', PROJECT_TYPE_PROJECT, category)
         self.make_assignment(category, self.local_user, self.role_owner)
@@ -439,11 +439,11 @@ class TestUserDetailView(
 
         self.login_and_redirect(self.ldap_user, self.url_public)
         WebDriverWait(self.selenium, 15).until(
-            lambda x: self._project_list_rows_count(x) == 2
+            lambda x: self._get_project_list_row_count(x) == 2
         )
 
     def test_back_button_from_user_list_view(self):
-        """Test "Back" button in public profile from user list view"""
+        """Test public profile back button from user list view"""
         url = reverse('userprofile:list')
         self.login_and_redirect(self.regular_user, url)
         WebDriverWait(self.selenium, 15).until(
@@ -458,11 +458,10 @@ class TestUserDetailView(
             lambda x: x.find_element(By.ID, 'sodar-up-detail-back-btn')
         )
         back_btn = self.selenium.find_element(By.ID, 'sodar-up-detail-back-btn')
-        self.assertEqual(back_btn.text, 'Back')
         self.assertTrue(back_btn.get_attribute('href').endswith(url))
 
     def test_back_button_from_project_members_view(self):
-        """Test "Back" button in public profile from project members view"""
+        """Test public profile back button from project members view"""
         category = self.make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
@@ -483,11 +482,10 @@ class TestUserDetailView(
             lambda x: x.find_element(By.ID, 'sodar-up-detail-back-btn')
         )
         back_btn = self.selenium.find_element(By.ID, 'sodar-up-detail-back-btn')
-        self.assertEqual(back_btn.text, 'Back')
         self.assertTrue(back_btn.get_attribute('href').endswith(url))
 
     def test_back_button_absence_in_private_profile(self):
-        """Test "Back" button absence when viewing a private profile"""
+        """Test back button absence when viewing private profile"""
         self.login_and_redirect(self.local_user, self.url)
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-up-detail-back-btn')

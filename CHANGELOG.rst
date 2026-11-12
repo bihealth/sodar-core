@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.5.0 (2026-11-12)
+===================
 
 Added
 -----
@@ -23,6 +23,7 @@ Added
     - ``ProjectUUIDRetrieveAPIView`` REST API view (#1931)
     - ``updatetitleslugs`` management command (#1931)
     - Project operations dropdown in project header (#2012, #2013)
+    - ``ProjectListAjaxView`` mutual project list retrieval support (#2000)
     - Project list public access project toggling (#2007)
     - ``project_list_public_display`` app setting (#2007)
     - ``get_user_html()`` and ``get_user_badge()`` user profile linking (#1999)
@@ -34,6 +35,7 @@ Added
     - ``UserListView`` view for user browsing (#1984, #2026, #2035, #2036)
     - ``UserListSiteAppPlugin`` plugin (#1984)
     - ``UserDetailView`` back navigation (#1984, #1999, #2033)
+    - ``UserDetailView`` user project list (#2000)
 
 Changed
 -------
@@ -49,6 +51,8 @@ Changed
     - Upgrade projectroles sync REST API version to v2.2 (#1931)
     - Update project header layout (#2012)
     - Disable project list page control if list is empty (#2023)
+    - Move search results loading spinner to view header (#2001)
+    - Update Markdown preview placeholder text (#2008, #2043)
 - **Timeline**
     - Upgrade timeline REST API version to v2.1 (#1963)
 - **Userprofile**
@@ -57,6 +61,8 @@ Changed
 Fixed
 -----
 
+- **Filesfolders**
+    - REST API view parameter docs (#1991)
 - **Projectroles**
     - Incorrect URLs and user checks in category permission tests (#2014)
     - ``AppSettingAPI`` missing ``project_types`` checks (#2009)
@@ -65,6 +71,8 @@ Fixed
     - App setting update REST API views fail with boolean string values (#2024)
     - ``confirm_delete_host.html`` button alignment (#2028)
     - ``ProjectDeleteView`` success message capitalization (#2029)
+    - ``ProjectSearchResultsView`` unwanted altering of search term case in UI (#2002)
+    - ``Project.has_public_children`` not updated on child creation (#2037)
 
 Removed
 -------
@@ -74,9 +82,11 @@ Removed
     - django-docs dependency (#1996)
     - versioneer dependency (#1995)
     - xmlsec1 dependency for previously removed SAML support (#1992)
+    - mistune dependency (#1991)
 - **Projectroles**
     - Kiosk mode support (#1775)
     - ``PROJECTROLES_KIOSK_MODE`` env var (#1775)
+    - ``render_markdown()`` common template tag (#1892)
 - **Userprofile**
     - ``enable_project_uuid_copy`` app setting (#2013)
 

@@ -56,8 +56,8 @@ class TestUserListAjaxView(UserViewTestBase):
             sorted(response.data, key=lambda x: x['email']), self.expected
         )
 
-    def test_get_as_regular_user(self):
-        """Test UserListAjaxView GET as regular user"""
+    def test_get_regular_user(self):
+        """Test GET as regular user"""
         with self.login(self.regular_user):
             response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
@@ -65,7 +65,7 @@ class TestUserListAjaxView(UserViewTestBase):
             sorted(response.data, key=lambda x: x['email']), self.expected
         )
 
-    def test_get_as_anonymous_user(self):
-        """Test UserListAjaxView GET as regular user"""
+    def test_get_anonymous_user(self):
+        """Test GET as anonymous user"""
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 403)

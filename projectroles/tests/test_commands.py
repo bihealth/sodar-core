@@ -1150,6 +1150,60 @@ class TestCleanAppSettings(
         self.assertEqual(AppSetting.objects.count(), 8)
 
 
+@override_settings(DEBUG=True)
+class TestCreateDevUsers(TestCase):
+    """Tests for createdevusers command"""
+
+    def setUp(self):
+        super().setUp()
+        self.cmd_name = 'createdevusers'
+
+    def test_create(self):
+        """Test creating users"""
+        self.assertEqual(User.objects.count(), 0)
+        call_command(self.cmd_name)
+        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
+        for u in DEV_USER_NAMES:
+            user = User.objects.filter(
+                username=u,
+                name=f'{u.capitalize()} Example',
+                first_name=u.capitalize(),
+                last_name='Example',
+                email=f'{u}@example.com',
+            ).first()
+            self.assertIsNotNone(user)
+            self.assertEqual(user.check_password(DEFAULT_PASSWORD), True)
+
+    def test_create_custom_password(self):
+        """Test creating users with custom password"""
+        call_command(self.cmd_name, password=CUSTOM_PASSWORD)
+        for u in DEV_USER_NAMES:
+            user = User.objects.filter(username=u).first()
+            self.assertEqual(user.check_password(CUSTOM_PASSWORD), True)
+
+    def test_create_existing(self):
+        """Test creating users with existing user in list"""
+        self.make_user(DEV_USER_NAMES[0])
+        self.assertEqual(User.objects.count(), 1)
+        call_command(self.cmd_name)
+        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
+
+    def test_create_existing_not_in_list(self):
+        """Test creating users with existing user not in list"""
+        self.make_user('user_new')
+        self.assertEqual(User.objects.count(), 1)
+        call_command(self.cmd_name)
+        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES) + 1)
+
+    @override_settings(DEBUG=False)
+    def test_create_no_debug(self):
+        """Test creating users with debug mode disabled (should fail)"""
+        self.assertEqual(User.objects.count(), 0)
+        with self.assertRaises(SystemExit):
+            call_command(self.cmd_name)
+        self.assertEqual(User.objects.count(), 0)
+
+
 class TestRemoveRoles(
     ProjectMixin,
     RoleMixin,
@@ -1857,60 +1911,6 @@ class TestTransferRolesCommand(
         self.assertFalse(self.user_owner_cat.is_active)
         self.user_contributor.refresh_from_db()
         self.assertTrue(self.user_contributor.is_active)
-
-
-@override_settings(DEBUG=True)
-class TestCreateDevUsers(TestCase):
-    """Tests for createdevusers command"""
-
-    def setUp(self):
-        super().setUp()
-        self.cmd_name = 'createdevusers'
-
-    def test_create(self):
-        """Test creating users"""
-        self.assertEqual(User.objects.count(), 0)
-        call_command(self.cmd_name)
-        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
-        for u in DEV_USER_NAMES:
-            user = User.objects.filter(
-                username=u,
-                name=f'{u.capitalize()} Example',
-                first_name=u.capitalize(),
-                last_name='Example',
-                email=f'{u}@example.com',
-            ).first()
-            self.assertIsNotNone(user)
-            self.assertEqual(user.check_password(DEFAULT_PASSWORD), True)
-
-    def test_create_custom_password(self):
-        """Test creating users with custom password"""
-        call_command(self.cmd_name, password=CUSTOM_PASSWORD)
-        for u in DEV_USER_NAMES:
-            user = User.objects.filter(username=u).first()
-            self.assertEqual(user.check_password(CUSTOM_PASSWORD), True)
-
-    def test_create_existing(self):
-        """Test creating users with existing user in list"""
-        self.make_user(DEV_USER_NAMES[0])
-        self.assertEqual(User.objects.count(), 1)
-        call_command(self.cmd_name)
-        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
-
-    def test_create_existing_not_in_list(self):
-        """Test creating users with existing user not in list"""
-        self.make_user('user_new')
-        self.assertEqual(User.objects.count(), 1)
-        call_command(self.cmd_name)
-        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES) + 1)
-
-    @override_settings(DEBUG=False)
-    def test_create_no_debug(self):
-        """Test creating users with debug mode disabled (should fail)"""
-        self.assertEqual(User.objects.count(), 0)
-        with self.assertRaises(SystemExit):
-            call_command(self.cmd_name)
-        self.assertEqual(User.objects.count(), 0)
 
 
 class TestUpdateTitleSlugs(

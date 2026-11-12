@@ -186,11 +186,11 @@ class FolderListCreateAPIView(
 
     **Parameters for POST:**
 
-    - ``name``: Folder name (string)
-    - ``folder``: Parent folder UUID (string)
-    - ``owner``: User UUID of folder owner (string)
-    - ``flag``: Folder flag (string, optional)
     - ``description``: Folder description (string, optional)
+    - ``flag``: Folder flag (string, optional)
+    - ``folder``: Parent folder UUID (string)
+    - ``name``: Folder name (string)
+    - ``owner``: User UUID of folder owner (string)
     """
 
     pagination_class = SODARPageNumberPagination
@@ -214,11 +214,11 @@ class FolderRetrieveUpdateDestroyAPIView(
 
     **Parameters for PUT and PATCH:**
 
-    - ``name``: Folder name (string)
-    - ``folder``: Parent folder UUID (string)
-    - ``owner``: User UUID of folder owner (string)
-    - ``flag``: Folder flag (string, optional)
     - ``description``: Folder description (string, optional)
+    - ``flag``: Folder flag (string, optional)
+    - ``folder``: Parent folder UUID (string)
+    - ``name``: Folder name (string)
+    - ``owner``: User UUID of folder owner (string)
     """
 
     lookup_field = 'sodar_uuid'
@@ -254,13 +254,13 @@ class FileListCreateAPIView(
 
     **Parameters for POST:**
 
-    - ``name``: Folder name (string)
-    - ``folder``: Parent folder UUID (string)
-    - ``owner``: User UUID of folder owner (string)
-    - ``flag``: Folder flag (string, optional)
-    - ``description``: Folder description (string, optional)
-    - ``public_url``: Allow creation of a publicly viewable URL (bool)
+    - ``description``: File description (string, optional)
     - ``file``: File to be uploaded
+    - ``flag``: File flag (string, optional)
+    - ``folder``: Parent folder UUID (string)
+    - ``name``: File name (string)
+    - ``owner``: User UUID of folder owner (string)
+    - ``public_url``: Allow creation of a publicly viewable URL (bool)
     """
 
     pagination_class = SODARPageNumberPagination
@@ -284,13 +284,13 @@ class FileRetrieveUpdateDestroyAPIView(
 
     **Parameters for PUT and PATCH:**
 
-    - ``name``: Folder name (string)
-    - ``folder``: Parent folder UUID (string)
-    - ``owner``: User UUID of folder owner (string)
-    - ``flag``: Folder flag (string, optional)
-    - ``description``: Folder description (string, optional)
-    - ``public_url``: Allow creation of a publicly viewable URL (bool)
+    - ``description``: File description (string, optional)
     - ``file``: File to be uploaded
+    - ``flag``: File flag (string, optional)
+    - ``folder``: Parent folder UUID (string)
+    - ``name``: File name (string)
+    - ``owner``: User UUID of folder owner (string)
+    - ``public_url``: Allow creation of a publicly viewable URL (bool)
     """
 
     lookup_field = 'sodar_uuid'
@@ -345,11 +345,11 @@ class HyperLinkListCreateAPIView(
 
     **Parameters for POST:**
 
-    - ``name``: Folder name (string)
+    - ``description``: Link description (string, optional)
+    - ``flag``: Link flag (string, optional)
     - ``folder``: Parent folder UUID (string)
-    - ``owner``: User UUID of folder owner (string)
-    - ``flag``: Folder flag (string, optional)
-    - ``description``: Folder description (string, optional)
+    - ``name``: Link name (string)
+    - ``owner``: User UUID of Link owner (string)
     - ``url``: URL for the link (string)
     """
 
@@ -374,11 +374,12 @@ class HyperLinkRetrieveUpdateDestroyAPIView(
 
     **Parameters for PUT and PATCH:**
 
-    - ``name``: Folder name (string)
+    - ``description``: Link description (string, optional)
+    - ``name``: Link name (string)
     - ``folder``: Parent folder UUID (string)
-    - ``owner``: User UUID of folder owner (string)
-    - ``flag``: Folder flag (string, optional)
-    - ``description``: Folder description (string, optional)
+    - ``owner``: User UUID of link owner (string)
+    - ``flag``: Link flag (string, optional)
+
     - ``url``: URL for the link (string)
     """
 

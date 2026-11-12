@@ -194,8 +194,7 @@ The following settings can be used to configure martor:
         'hljs': env.str('MARTOR_ENABLE_CONFIG_HLJS', 'false'),
     }
     MARTOR_PREVIEW_PLACEHOLDER = env.str(
-        'MARTOR_PREVIEW_PLACEHOLDER',
-        'Markdown preview',
+        'MARTOR_PREVIEW_PLACEHOLDER', 'Markdown preview'
     )
     MARTOR_ALTERNATIVE_CSS_FILE_THEME = env.str(
         'MARTOR_ALTERNATIVE_CSS_FILE_THEME',
@@ -365,10 +364,9 @@ The following projectroles settings are **optional**:
     Support contact to be displayed for users, overrides ``ADMINS``. Input as
     "name:email" (string)
 ``PROJECTROLES_USER_PROFILE_LINK``
-    Whether user mentions, such as in timeline events and in project members
-    views, are links to the user's public profile. This settings only makes
-    sense if the ``userprofile`` app is enabled and is ignored otherwise. (bool,
-    default=True, see also the :ref:`userprofile app docs <app_userprofile>`)
+    Direct UI user links to their user profile if set true. If false,
+    ``mailto:`` links to the user email are used instead. Only takes effect if
+    the ``userprofile`` app is enabled.
 
 Example:
 

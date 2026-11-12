@@ -86,11 +86,11 @@ class CacheItemRetrieveAPIView(
 
     **Returns:**
 
-    - ``project``: Project UUID (string)
     - ``app_name``: Name of app to which the item belongs (string)
-    - ``name``: Item name (string)
     - ``data``: Item data (JSON)
     - ``date_modified``: Item modification datetime (YYYY-MM-DDThh:mm:ssZ)
+    - ``name``: Item name (string)
+    - ``project``: Project UUID (string)
     - ``user``: UUID of user who created the item (string)
 
     **Version Changes:**

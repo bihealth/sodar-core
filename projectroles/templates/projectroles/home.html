@@ -25,7 +25,7 @@
   {% if can_create_project %}
     {# Project navigation dropdown #}
     {# Only visible if browser width < X and sidebar is hidden #}
-    {% include 'projectroles/_project_nav_btn.html' %}
+    {% include 'projectroles/_project_nav_dropdown.html' %}
   {% endif %}
   <h2 class="sodar-pr-content-title pt-2">Home</h2>
 </div>
@@ -51,38 +51,35 @@
   <script type="text/javascript">
     tourEnabled = true
     tour.addStep('home_project', {
-      title: 'Available ' +
-             '{% get_display_name 'PROJECT' title=True plural=True %}',
-      text: '{% get_display_name 'PROJECT' title=True plural=True %} and ' +
-            '{% get_display_name 'CATEGORY' plural=True %} ' +
-            'available to you are listed in this table.',
+      title: `Available {% get_display_name 'PROJECT' title=True plural=True %}`,
+      text: `{% get_display_name 'PROJECT' title=True plural=True %} and
+      {% get_display_name 'CATEGORY' plural=True %} available to you are listed
+      in this table.`,
       attachTo: '#sodar-pr-project-list-header top',
       advanceOn: '.docs-link click',
       showCancelLink: true
     })
     tour.addStep('home_filter', {
-      title: 'Filter ' +
-             '{% get_display_name 'PROJECT' title=True plural=True %} List',
-      text: 'Type here to filter the {% get_display_name 'PROJECT' %} list ' +
-            'according to a search term.',
+      title: `Filter {% get_display_name 'PROJECT' title=True plural=True %} List`,
+      text: `Type here to filter the {% get_display_name 'PROJECT' %} list
+      according to a search term.`,
       attachTo: '#sodar-pr-project-list-filter left',
       advanceOn: '.docs-link click',
       showCancelLink: true
     })
     tour.addStep('home_pagination', {
       title: 'List Pagination',
-      text: 'Set the list of entries shown on each page. This value will be ' +
-            'saved in your user settings.',
+      text: `Set the list of entries shown on each page. This value will be
+      saved in your user settings.`,
       attachTo: '#sodar-pr-project-list-page-length left',
       advanceOn: '.docs-link click',
       showCancelLink: true
     })
     tour.addStep('home_star', {
-      title: 'View Starred ' +
-             '{% get_display_name 'PROJECT' title=True plural=True %}',
-      text: 'Click here to enable/disable viewing only ' +
-            '{% get_display_name 'PROJECT' plural=True %} you have ' +
-            '"starred" for your favourites in the project view header. ',
+      title: `View Starred {% get_display_name 'PROJECT' title=True plural=True %}`,
+      text: `Click here to enable/disable viewing only
+      {% get_display_name 'PROJECT' plural=True %} you have "starred" for your
+      favourites in the project view header.`,
       attachTo: '#sodar-pr-project-list-link-star bottom',
       advanceOn: '.docs-link click',
       showCancelLink: true
