@@ -323,7 +323,7 @@ class AppLinkAPI:
                     'method': 'POST',
                 }
             )
-        elif not getattr(settings, 'PROJECTROLES_KIOSK_MODE', False):
+        else:
             ret.append(
                 {
                     'name': 'login',

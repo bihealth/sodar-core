@@ -17,6 +17,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import (
     APIException,
     NotAcceptable,
+    NotAuthenticated,
     NotFound,
     PermissionDenied,
 )
@@ -96,18 +97,19 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
     'APP_SETTING_SCOPE_PROJECT_USER'
 ]
+APP_SETTING_TYPE_BOOLEAN = SODAR_CONSTANTS['APP_SETTING_TYPE_BOOLEAN']
 
 # API constants for projectroles APIs
 PROJECTROLES_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.projectroles+json'
 )
-PROJECTROLES_API_DEFAULT_VERSION = '2.0'
-PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0', '1.1', '2.0']
+PROJECTROLES_API_DEFAULT_VERSION = '2.1'
+PROJECTROLES_API_ALLOWED_VERSIONS = ['1.0', '1.1', '2.0', '2.1']
 SYNC_API_MEDIA_TYPE = (
     'application/vnd.bihealth.sodar-core.projectroles.sync+json'
 )
-SYNC_API_DEFAULT_VERSION = '2.1'
-SYNC_API_ALLOWED_VERSIONS = ['1.0', '2.0', '2.1']
+SYNC_API_DEFAULT_VERSION = '2.2'
+SYNC_API_ALLOWED_VERSIONS = ['1.0', '2.0', '2.1', '2.2']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -133,6 +135,7 @@ CAT_PUBLIC_STATS_API_MSG = (
 )
 VERSION_1_1 = parse_version('1.1')
 VERSION_2_0 = parse_version('2.0')
+VERSION_2_1 = parse_version('2.1')
 
 
 # Permission / Versioning / Renderer Classes -----------------------------------
@@ -195,9 +198,11 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
             )
 
         owner_or_delegate = project.is_owner_or_delegate(request.user)
-        if not (
-            request.user.is_superuser or owner_or_delegate
-        ) and app_settings.get(APP_NAME, 'ip_restrict', project):
+        if (
+            not (request.user.is_superuser or owner_or_delegate)
+            and project.is_project()
+            and app_settings.get(APP_NAME, 'ip_restrict', project)
+        ):
             for k in (
                 'HTTP_X_FORWARDED_FOR',
                 'X_FORWARDED_FOR',
@@ -481,15 +486,18 @@ class ProjectRetrieveAPIView(
     - ``description``: Project description (string)
     - ``full_title``: Full project title with parent categories (string)
     - ``parent``: Parent category UUID (string or null)
-    - ``readme``: Project readme (string, supports markdown)
     - ``public_access``: Read-only access for all users (role name as string or None)
+    - ``readme``: Project readme (string, supports markdown)
     - ``roles``: Project role assignments (dict, assignment UUID as key)
     - ``sodar_uuid``: Project UUID (string)
     - ``title``: Project title (string)
+    - ``title_slug``: Optional slugified project title alias (string)
     - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
 
     **Version Changes:**
 
+    - ``2.1``
+        * Add ``title_slug`` field
     - ``2.0``
         * Replace ``roles`` field user serializer with user UUID
         * Replace ``public_guest_access`` field with ``public_access``
@@ -516,16 +524,19 @@ class ProjectCreateAPIView(
 
     **Parameters:**
 
-    - ``title``: Project title (string)
-    - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
-    - ``parent``: Parent category UUID (string)
     - ``description``: Project description (string, optional)
-    - ``readme``: Project readme (string, optional, supports markdown)
-    - ``public_access``: Public read-only access for all users (string or None)
     - ``owner``: User UUID of the project owner (string)
+    - ``parent``: Parent category UUID (string)
+    - ``public_access``: Public read-only access for all users (string or None)
+    - ``readme``: Project readme (string, optional, supports markdown)
+    - ``title``: Project title (string)
+    - ``title_slug``: Optional slugified project title alias (string)
+    - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
 
     **Version Changes:**
 
+    - ``2.1``
+        * Add ``title_slug`` field
     - ``2.0``
         * Replace ``public_guest_access`` field with ``public_access``
     """
@@ -558,13 +569,17 @@ class ProjectUpdateAPIView(
 
     **Parameters:**
 
+    - ``description``: Project description (string, optional)
+    - ``parent``: Parent category UUID (string)
+    - ``public_access``: Public read-only access for all users (string or None)
+    - ``readme``: Project readme (string, optional, supports markdown)
     - ``title``: Project title (string)
     - ``type``: Project type (string, can not be modified)
-    - ``parent``: Parent category UUID (string)
-    - ``description``: Project description (string, optional)
-    - ``readme``: Project readme (string, optional, supports markdown)
-    - ``public_access``: Public read-only access for all users (string or None)
 
+    **Version Changes:**
+
+    - ``2.1``
+        * Add ``title_slug`` field
     - ``2.0``
         * Replace ``public_guest_access`` field with ``public_access``
     """
@@ -620,6 +635,65 @@ class ProjectDestroyAPIView(
             raise PermissionDenied(msg)
         with transaction.atomic():
             self.handle_delete(instance, self.request)
+
+
+@extend_schema(
+    responses={
+        '200': inline_serializer(
+            'ProjectUUIDGetResponse',
+            fields={'project_uuid': serializers.CharField()},
+        )
+    }
+)
+class ProjectUUIDRetrieveAPIView(ProjectrolesAPIVersioningMixin, APIView):
+    """
+    Retrieve a project or category UUID by its title slug.
+
+    Returns 403 if user is not authorized to access the project or if a project
+    with the given title slug is not found.
+
+    **URL:** ``/project/api/project-uuid/retrieve/{Project.title_slug}``
+
+    **Methods:** ``GET``
+
+    **Returns:**
+
+    - ``sodar_uuid``: Project UUID (string)
+
+    **Version Changes:**
+
+    - ``2.1``
+        * Add view
+    """
+
+    http_method_names = ['get']
+
+    def get(self, request, *args, **kwargs):
+        if parse_version(request.version) < VERSION_2_1:
+            raise NotAcceptable(VIEW_NOT_ACCEPTABLE_VERSION_MSG)
+        slug_kw = self.kwargs.get('slug', '').strip()
+        if not slug_kw:
+            raise PermissionDenied()
+        project = Project.objects.filter(title_slug=slug_kw).first()
+        if project and (
+            (
+                project.public_access
+                and (
+                    request.user.is_authenticated
+                    or getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False)
+                )
+            )
+            or (
+                request.user
+                and request.user.is_authenticated
+                and request.user.has_perm('projectroles.view_project', project)
+            )
+        ):
+            return Response({'sodar_uuid': str(project.sodar_uuid)}, status=200)
+        # Return 403 instead of 404 to avoid revealing project titles
+        if not request.user or not request.user.is_authenticated:
+            raise NotAuthenticated()
+        raise PermissionDenied()
 
 
 class RoleAssignmentCreateAPIView(
@@ -898,9 +972,9 @@ class ProjectInviteRetrieveAPIView(
 
     - ``date_created``: Creation datetime string (YYYY-MM-DDThh:mm:ssZ)
     - ``date_expire``: Expiry datetime string (YYYY-MM-DDThh:mm:ssZ)
-    - ``message``: Optional invite message (string)
-    - ``issuer``: UUID of issuing user (string)
     - ``email``: Email of invited user (string)
+    - ``issuer``: UUID of issuing user (string)
+    - ``message``: Optional invite message (string)
     - ``project``: Project UUID (string)
     - ``role``: Role for invided user (string, e.g. "project contributor")
     - ``sodar_uuid``: Invite UUID (string)
@@ -1215,13 +1289,13 @@ class ProjectSettingRetrieveAPIView(
 
     **Returns:**
 
+    - ``name``: Setting name (string)
     - ``plugin_name``: Name of app plugin for the setting (string)
     - ``project``: Project UUID or None
-    - ``user``: User UUID or None
-    - ``name``: Setting name (string)
     - ``type``: Setting type (string)
-    - ``value``: Setting value
+    - ``user``: User UUID or None
     - ``user_modifiable``: Modifiable by user (boolean)
+    - ``value``: Setting value
 
     **Version Changes:**
 
@@ -1305,6 +1379,11 @@ class ProjectSettingSetAPIView(
             raise PermissionDenied(USER_MODIFIABLE_MSG)
         # Get value
         value = self.get_request_value(request)
+        if s_def.type == APP_SETTING_TYPE_BOOLEAN and isinstance(value, str):
+            try:
+                value = bool(int(value))
+            except Exception as ex:
+                raise serializers.ValidationError(ex)
 
         # Get project and user, check perms
         project = self.get_project()
@@ -1422,13 +1501,13 @@ class UserSettingRetrieveAPIView(
 
     **Returns:**
 
+    - ``name``: Setting name (string)
     - ``plugin_name``: Name of app plugin for the setting (string)
     - ``project``: None
-    - ``user``: User UUID
-    - ``name``: Setting name (string)
     - ``type``: Setting type (string)
-    - ``value``: Setting value
+    - ``user``: User UUID
     - ``user_modifiable``: Modifiable by user (boolean)
+    - ``value``: Setting value
 
     **Version Changes:**
 
@@ -1483,7 +1562,13 @@ class UserSettingSetAPIView(
         )
         if not s_def.user_modifiable:
             raise PermissionDenied(USER_MODIFIABLE_MSG)
+
         value = self.get_request_value(request)
+        if s_def.type == APP_SETTING_TYPE_BOOLEAN and isinstance(value, str):
+            try:
+                value = bool(int(value))
+            except Exception as ex:
+                raise serializers.ValidationError(ex)
 
         try:
             app_settings.set(

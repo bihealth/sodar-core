@@ -1,7 +1,5 @@
 $(document).ready(function () {
-  console.log('ready')
-  $('.martor-preview').each(function() {
-    console.log($(this))
+  $('.martor-preview').each(function () {
     $(this).addClass('sodar-markdown-content')
   })
 })

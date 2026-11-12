@@ -81,6 +81,7 @@ html,
 
 .sodar-app-content-project {
   padding: 28px;
+  padding-top: 22px;
   flex: auto;
 }
 
@@ -100,7 +101,13 @@ html,
 
 nav.sodar-base-navbar {
   padding-left: 28px;
-  padding-right: 38px;
+  padding-right: 42px;
+}
+/* HACK: Fix invalid padding in Chrome caused by BS4 dropdowns and overflow-y */
+@supports (-moz-appearance: none) {
+  nav.sodar-base-navbar {
+    padding-right: 28px;
+  }
 }
 
 nav.sodar-base-navbar ul li.nav-item {
@@ -112,7 +119,7 @@ div.sodar-alert-container {
 }
 
 div.sodar-subtitle-container {
-  padding-top: 10px;
+  padding-top: 15px;
   padding-bottom: 8px;
   border-bottom: 1px solid #dfdfdf;
 }
@@ -154,7 +161,7 @@ div.sodar-subtitle-shadow {
 
 div.sodar-pr-content-title {
   vertical-align: bottom;
-  margin-bottom: 6px;
+  padding-bottom: 8px;
   border-bottom: 1px solid #dfdfdf;
   word-break: break-word;
 }
@@ -327,7 +334,19 @@ table.sodar-card-table-bordered tbody tr:last-child td {
 
 
 .sodar-pr-project-list-input-group {
-  max-width: 450px !important;
+  max-width: 500px !important;
+}
+
+.sodar-pr-project-list-input-group-anon {
+  max-width: 320px !important;
+}
+
+#sodar-pr-project-list-page-length {
+  width: 50px;
+}
+
+#sodar-pr-project-list-filter {
+  width: 185px !important;
 }
 
 button#sodar-pr-project-list-link-star {
@@ -524,15 +543,27 @@ a.sodar-pr-btn-copy-secret i {
   word-break: break-word;
 }
 
-.sodar-pr-sidebar-alt-btn {
-  height: 100%;
+#sodar-pr-sidebar-alt-btn {
   margin-right: 12px;
-  font-size: 100%;
   z-index: 1100;
 }
 
-.sodar-pr-sidebar-alt-btn a {
-  line-height: 24px;
+.sodar-pr-content-header-btn {
+  line-height: 16px;
+  height: 30px;
+  font-size: 100%;
+}
+
+.sodar-pr-content-header-btn a {
+  line-height: 22px;
+}
+
+.sodar-pr-content-header-btn button svg {
+  margin-top: 2px !important;
+}
+
+#sodar-pr-project-ops-btn {
+  z-index: 1030; /* Needs to be over 1020 to get past sticky-top */
 }
 
 .sodar-list-dropdown {
@@ -930,6 +961,9 @@ pre#sodar-email-body {
   border: none !important;
   padding: 10px !important;
   border-radius: 3px !important;
+}
+.sodar-markdown-content p:last-child {
+  margin-bottom: 12px !important;
 }
 
 /* Style for json input elements */

@@ -410,6 +410,13 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
                 'active': False,
             },
             {
+                'name': 'userprofile_list',
+                'url': reverse('userprofile:list'),
+                'label': 'User List',
+                'icon': 'mdi:account-multiple-outline',
+                'active': False,
+            },
+            {
                 'name': 'logout',
                 'url': reverse('logout'),
                 'label': 'Logout',
@@ -501,6 +508,13 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
                 'active': False,
             },
             {
+                'name': 'userprofile_list',
+                'url': reverse('userprofile:list'),
+                'label': 'User List',
+                'icon': 'mdi:account-multiple-outline',
+                'active': False,
+            },
+            {
                 'name': 'admin',
                 'url': None,  # No URL for Django admin, opens warning modal
                 'label': 'Django Admin',
@@ -521,8 +535,8 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
     def test_get_user_links_app_name(self):
         """Test get_user_links() with app plugin name"""
         links = app_links.get_user_links(self.user_owner, app_name='tokens')
-        self.assertEqual(len(links), 7)
-        for i in range(0, 6):
+        self.assertEqual(len(links), 8)
+        for i in range(0, 7):
             if i == 4:
                 self.assertEqual(links[i]['name'], 'tokens')
                 self.assertEqual(links[i]['active'], True)
@@ -534,8 +548,8 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
         links = app_links.get_user_links(
             self.user_owner, app_name='tokens', url_name='create'
         )
-        self.assertEqual(len(links), 7)
-        for i in range(0, 6):
+        self.assertEqual(len(links), 8)
+        for i in range(0, 7):
             if i == 4:
                 self.assertEqual(links[i]['name'], 'tokens')
                 self.assertEqual(links[i]['active'], True)
@@ -547,8 +561,8 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
         links = app_links.get_user_links(
             self.user, app_name=APP_NAME, url_name='remote_site_create'
         )
-        self.assertEqual(len(links), 13)
-        for i in range(0, 13):
+        self.assertEqual(len(links), 14)
+        for i in range(0, 14):
             if i == 4:
                 self.assertEqual(links[i]['name'], 'remotesites')
                 self.assertEqual(links[i]['active'], True)
@@ -560,8 +574,8 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
         links = app_links.get_user_links(
             self.user, app_name=APP_NAME, url_name='site_app_settings'
         )
-        self.assertEqual(len(links), 13)
-        for i in range(0, 13):
+        self.assertEqual(len(links), 14)
+        for i in range(0, 14):
             if i == 5:
                 self.assertEqual(links[i]['name'], 'siteappsettings')
                 self.assertEqual(links[i]['active'], True)
@@ -574,19 +588,13 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
         self.assertEqual(len(links), 1)
         self.assertEqual(links[0]['name'], 'login')
 
-    @override_settings(PROJECTROLES_KIOSK_MODE=True)
-    def test_get_user_links_anon_kiosk_mode(self):
-        """Test get_user_links() as anonymous user and kiosk mode"""
-        links = app_links.get_user_links(AnonymousUser())
-        self.assertEqual(len(links), 0)
-
     def test_get_user_links_read_only(self):
         """Test get_user_links() with site read-only mode as regular user"""
         app_settings.set(APP_NAME, 'site_read_only', True)
         # All should be returned
-        self.assertEqual(len(app_links.get_user_links(self.user_owner)), 7)
+        self.assertEqual(len(app_links.get_user_links(self.user_owner)), 8)
 
     def test_get_user_links_read_only_superuser(self):
         """Test get_user_links() with site read-only mode as superuser"""
         app_settings.set(APP_NAME, 'site_read_only', True)
-        self.assertEqual(len(app_links.get_user_links(self.user)), 13)
+        self.assertEqual(len(app_links.get_user_links(self.user)), 14)

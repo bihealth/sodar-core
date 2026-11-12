@@ -29,6 +29,7 @@ from projectroles.models import (
     ROLE_RANKING,
     CAT_DELIMITER,
     CAT_DELIMITER_ERROR_MSG,
+    PROJECT_TITLE_SLUG_MIN_LEN,
 )
 
 from projectroles.plugins import PluginAppSettingDef, PluginAPI
@@ -86,6 +87,18 @@ INVITE_EXISTS_MSG = (
 CAT_PUBLIC_STATS_FIELD = 'settings.projectroles.category_public_stats'
 CAT_PUBLIC_STATS_ERR_MSG = 'This field can only be set for top level categories'
 IP_ALLOW_LIST_FIELD = 'settings.projectroles.ip_allow_list'
+TITLE_SLUG_HELP_TEXT = (
+    '{project_type} title slug used as a human-friendly alias. WARNING: '
+    'updating the value may break any previously shared URLs.'
+)
+TITLE_SLUG_UNIQUE_MSG = 'Title slug must be unique'
+TITLE_SLUG_MAX_LEN_MSG = (
+    'Title slug is too long, maximum length is {max_len} characters'
+)
+TITLE_SLUG_MIN_LEN_MSG = (
+    f'Title slug is too short, must be at least {PROJECT_TITLE_SLUG_MIN_LEN} '
+    f'characters'
+)
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -318,7 +331,17 @@ class SODARAppSettingFormMixin:
             p_settings = {}
 
             for s_def in s_defs.values():
+                # Skip and/or pop invalid settings
                 s_field = '.'.join(['settings', p_name, s_def.name])
+                if s_field not in cleaned_data:
+                    continue
+                elif (
+                    s_def.scope == APP_SETTING_SCOPE_PROJECT
+                    and cleaned_data['type'] not in s_def.project_types
+                ):
+                    # Remove and skip settings which should not be included
+                    cleaned_data.pop(s_field, None)
+                    continue
                 p_settings[s_def.name] = cleaned_data.get(s_field)
 
                 if s_def.type == APP_SETTING_TYPE_JSON:
@@ -535,6 +558,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             'description',
             'readme',
             'public_access',
+            'title_slug',
         ]
 
     @classmethod
@@ -718,6 +742,10 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             self.fields['owner'].widget = forms.HiddenInput()
             # Set initial public access value
             self.initial['public_access'] = self.instance.public_access
+            # Set title slug help text
+            self.fields['title_slug'].help_text = TITLE_SLUG_HELP_TEXT.format(
+                project_type=get_display_name(self.instance.type, title=True)
+            )
 
             # Set valid choices for parent
             if not disable_categories:
@@ -754,6 +782,8 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
                 self.fields['owner'].widget = forms.HiddenInput()
             # Set initial public access value
             self.initial['public_access'] = None
+            # Hide title slug field
+            self.fields['title_slug'].widget = forms.HiddenInput()
 
             # Creating a subproject
             if parent_cat:
@@ -779,6 +809,7 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
             self.fields['parent'].widget = forms.HiddenInput()
             self.fields['description'].widget = forms.HiddenInput()
             self.fields['readme'].widget = forms.HiddenInput()
+            self.fields['title_slug'].widget = forms.HiddenInput()
 
     def clean(self):
         """Function for custom form validation and cleanup"""
@@ -859,6 +890,28 @@ class ProjectForm(SODARAppSettingFormMixin, SODARModelForm):
                 'public_access',
                 f'Public access is not allowed for {categories_title}',
             )
+
+        # Set title_slug on creation (will be normalized on save())
+        if not self.instance.pk:
+            self.cleaned_data['title_slug'] = title
+        # Enforce uniqueness on update
+        elif self.cleaned_data.get('title_slug'):
+            slug_len = len(self.cleaned_data['title_slug'])
+            max_len = settings.PROJECTROLES_TITLE_SLUG_MAX_LEN
+            if slug_len < PROJECT_TITLE_SLUG_MIN_LEN:
+                self.add_error('title_slug', TITLE_SLUG_MIN_LEN_MSG)
+            elif slug_len > max_len:
+                self.add_error(
+                    'title_slug', TITLE_SLUG_MAX_LEN_MSG.format(max_len=max_len)
+                )
+            elif (
+                Project.objects.filter(
+                    title_slug=self.cleaned_data['title_slug']
+                )
+                .exclude(sodar_uuid=self.instance.sodar_uuid)
+                .exists()
+            ):
+                self.add_error('title_slug', TITLE_SLUG_UNIQUE_MSG)
 
         # Clean and validate app settings
         cleaned_data, errors = self.clean_app_settings(

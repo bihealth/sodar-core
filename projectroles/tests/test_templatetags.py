@@ -1,6 +1,5 @@
 """Tests for template tags in the projectroles app"""
 
-import mistune
 import uuid
 
 from importlib import import_module
@@ -312,63 +311,110 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
 
     def test_get_user_html(self):
         """Test get_user_html()"""
-        self.assertEqual(
-            c_tags.get_user_html(self.user),
-            f'<span class="sodar-user-html" data-toggle="tooltip" '
-            f'data-placement="top" title="{self.user.get_full_name()}">'
-            f'<a href="mailto:{self.user.email}">{self.user.username}</a>'
-            f'</span>',
+        user_profile_link = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': self.user.sodar_uuid},
         )
+        with self.login(self.user):
+            request = self.req_factory.get(reverse('home'))
+            request.user = self.user
+            self.assertEqual(
+                c_tags.get_user_html(self.user, request),
+                f'<span class="sodar-user-html" data-toggle="tooltip" '
+                f'data-placement="top" title="{self.user.get_full_name()}">'
+                f'<a href="{user_profile_link}">{self.user.username}</a>'
+                f'</span>',
+            )
 
     def test_get_user_html_superuser(self):
         """Test get_user_html() with superuser"""
         self.user.is_superuser = True
-        self.assertEqual(
-            c_tags.get_user_html(self.user),
-            '<span class="sodar-user-html" data-toggle="tooltip" '
-            'data-placement="top" title="{}"><a href="mailto:{}">'
-            '{}</a><i class="iconify text-info ml-1" '
-            'data-icon="mdi:shield-account"></i></span>'.format(
-                self.user.get_full_name() + ' (superuser)',
-                self.user.email,
-                self.user.username,
-            ),
+        user_profile_link = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': self.user.sodar_uuid},
         )
+        with self.login(self.user):
+            request = self.req_factory.get(reverse('home'))
+            request.user = self.user
+            self.assertEqual(
+                c_tags.get_user_html(self.user, request),
+                '<span class="sodar-user-html" data-toggle="tooltip" '
+                'data-placement="top" title="{}"><a href="{}">'
+                '{}</a><i class="iconify text-info ml-1" '
+                'data-icon="mdi:shield-account"></i></span>'.format(
+                    self.user.get_full_name() + ' (superuser)',
+                    user_profile_link,
+                    self.user.username,
+                ),
+            )
 
     def test_get_user_html_inactive(self):
         """Test get_user_html() with inactive user"""
         self.user.is_active = False
-        self.assertEqual(
-            c_tags.get_user_html(self.user),
-            '<span class="sodar-user-html text-secondary" '
-            'data-toggle="tooltip" data-placement="top" title="{}">{}'
-            '<i class="iconify text-secondary ml-1" '
-            'data-icon="mdi:account-off"></i></span>'.format(
-                self.user.get_full_name() + ' (inactive)', self.user.username
-            ),
+        user_profile_link = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': self.user.sodar_uuid},
         )
+        with self.login(self.user):
+            request = self.req_factory.get(reverse('home'))
+            request.user = self.user
+            self.assertEqual(
+                c_tags.get_user_html(self.user, request),
+                '<span class="sodar-user-html text-secondary" '
+                'data-toggle="tooltip" data-placement="top" title="{}">'
+                '<a href="{}">{}</a>'
+                '<i class="iconify text-secondary ml-1" '
+                'data-icon="mdi:account-off"></i></span>'.format(
+                    self.user.get_full_name() + ' (inactive)',
+                    user_profile_link,
+                    self.user.username,
+                ),
+            )
 
     def test_get_user_html_superuser_inactive(self):
         """Test get_user_html() with inactive superuser"""
         self.user.is_superuser = True
         self.user.is_active = False
-        self.assertEqual(
-            c_tags.get_user_html(self.user),
-            '<span class="sodar-user-html text-secondary" '
-            'data-toggle="tooltip" data-placement="top" title="{}">{}'
-            '<i class="iconify text-info ml-1" '
-            'data-icon="mdi:shield-account"></i>'
-            '<i class="iconify text-secondary ml-1" '
-            'data-icon="mdi:account-off"></i></span>'.format(
-                self.user.get_full_name() + ' (inactive)', self.user.username
-            ),
+        user_profile_link = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': self.user.sodar_uuid},
         )
+        with self.login(self.user):
+            request = self.req_factory.get(reverse('home'))
+            request.user = self.user
+            self.assertEqual(
+                c_tags.get_user_html(self.user, request),
+                '<span class="sodar-user-html text-secondary" '
+                'data-toggle="tooltip" data-placement="top" title="{}">'
+                '<a href="{}">{}</a>'
+                '<i class="iconify text-info ml-1" '
+                'data-icon="mdi:shield-account"></i>'
+                '<i class="iconify text-secondary ml-1" '
+                'data-icon="mdi:account-off"></i></span>'.format(
+                    self.user.get_full_name() + ' (inactive)',
+                    user_profile_link,
+                    self.user.username,
+                ),
+            )
 
-    def test_get_user_html_no_email(self):
+    @override_settings(PROJECTROLES_USER_PROFILE_LINK=False)
+    def test_get_user_html_with_profile_link_disabled(self):
         """Test get_user_html() with no email on user"""
         self.user.email = ''
+        with self.login(self.user):
+            request = self.req_factory.get(reverse('home'))
+            request.user = self.user
+            self.assertEqual(
+                c_tags.get_user_html(self.user, request),
+                f'<span class="sodar-user-html" data-toggle="tooltip" '
+                f'data-placement="top" title="{self.user.get_full_name()}">'
+                f'{self.user.username}</span>',
+            )
+
+    def test_get_user_html_null_request(self):
+        """Test get_user_html() when request is None"""
         self.assertEqual(
-            c_tags.get_user_html(self.user),
+            c_tags.get_user_html(self.user, None),
             f'<span class="sodar-user-html" data-toggle="tooltip" '
             f'data-placement="top" title="{self.user.get_full_name()}">'
             f'{self.user.username}</span>',
@@ -376,6 +422,10 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
 
     def test_get_user_badge(self):
         """Test get_user_badge()"""
+        user_profile_link = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': self.user.sodar_uuid},
+        )
         expected = (
             f'<span class="badge badge-primary sodar-obj-badge '
             f'sodar-user-badge sodar-user-badge-active" '
@@ -383,14 +433,17 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             f'data-toggle="tooltip" '
             f'data-uuid="{self.user.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:account"></i> '
-            f'<a class="text-white" href="mailto:{self.user.email}">'
+            f'<a class="text-white" href="{user_profile_link}">'
             f'{self.user.username}</a></span>'
         )
-        self.assertEqual(c_tags.get_user_badge(self.user), expected)
+        with self.login(self.user):
+            self.assertEqual(
+                c_tags.get_user_badge(self.user, self.user), expected
+            )
 
-    def test_get_user_badge_no_email(self):
-        """Test get_user_badge() with no email"""
-        self.user.email = None
+    @override_settings(PROJECTROLES_USER_PROFILE_LINK=False)
+    def test_get_user_badge_with_profile_link_disabled(self):
+        """Test get_user_badge() with user profile link disabled"""
         expected = (
             f'<span class="badge badge-primary sodar-obj-badge '
             f'sodar-user-badge sodar-user-badge-active" '
@@ -400,10 +453,17 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             f'<i class="iconify" data-icon="mdi:account"></i> '
             f'{self.user.username}</span>'
         )
-        self.assertEqual(c_tags.get_user_badge(self.user), expected)
+        with self.login(self.user):
+            self.assertEqual(
+                c_tags.get_user_badge(self.user, self.user), expected
+            )
 
     def test_get_user_badge_superuser(self):
         """Test get_user_badge() with superuser"""
+        user_profile_link = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': self.superuser.sodar_uuid},
+        )
         expected = (
             f'<span class="badge badge-primary sodar-obj-badge '
             f'sodar-user-badge sodar-user-badge-superuser" '
@@ -411,14 +471,21 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             f'data-toggle="tooltip" '
             f'data-uuid="{self.superuser.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:shield-account"></i> '
-            f'<a class="text-white" href="mailto:{self.superuser.email}">'
+            f'<a class="text-white" href="{user_profile_link}">'
             f'{self.superuser.username}</a></span>'
         )
-        self.assertEqual(c_tags.get_user_badge(self.superuser), expected)
+        with self.login(self.user):
+            self.assertEqual(
+                c_tags.get_user_badge(self.user, self.superuser), expected
+            )
 
     def test_get_user_badge_inactive(self):
         """Test get_user_badge() with inactive user"""
         self.user.is_active = False
+        user_profile_link = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': self.user.sodar_uuid},
+        )
         expected = (
             f'<span class="badge badge-secondary sodar-obj-badge '
             f'sodar-user-badge sodar-user-badge-inactive" '
@@ -426,12 +493,20 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             f'data-toggle="tooltip" '
             f'data-uuid="{self.user.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:account-off"></i> '
-            f'{self.user.username}</span>'
+            f'<a class="text-white" href="{user_profile_link}">'
+            f'{self.user.username}</a></span>'
         )
-        self.assertEqual(c_tags.get_user_badge(self.user), expected)
+        with self.login(self.user):
+            self.assertEqual(
+                c_tags.get_user_badge(self.user, self.user), expected
+            )
 
     def test_get_user_badge_extra_class(self):
         """Test get_user_badge() with extra_class"""
+        user_profile_link = reverse(
+            'userprofile:detail_public',
+            kwargs={'user': self.user.sodar_uuid},
+        )
         expected = (
             f'<span class="badge badge-primary sodar-obj-badge '
             f'sodar-user-badge sodar-user-badge-active mr-1" '
@@ -439,11 +514,28 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
             f'data-toggle="tooltip" '
             f'data-uuid="{self.user.sodar_uuid}">'
             f'<i class="iconify" data-icon="mdi:account"></i> '
-            f'<a class="text-white" href="mailto:{self.user.email}">'
+            f'<a class="text-white" href="{user_profile_link}">'
             f'{self.user.username}</a></span>'
         )
+        with self.login(self.user):
+            self.assertEqual(
+                c_tags.get_user_badge(self.user, self.user, extra_class='mr-1'),
+                expected,
+            )
+
+    def test_get_user_badge_anonymous(self):
+        """Test get_user_badge() with anonymous user"""
+        expected = (
+            f'<span class="badge badge-primary sodar-obj-badge '
+            f'sodar-user-badge sodar-user-badge-active" '
+            f'title="{self.user.get_full_name()}" '
+            f'data-toggle="tooltip" '
+            f'data-uuid="{self.user.sodar_uuid}">'
+            f'<i class="iconify" data-icon="mdi:account"></i> '
+            f'{self.user.username}</span>'
+        )
         self.assertEqual(
-            c_tags.get_user_badge(self.user, extra_class='mr-1'), expected
+            c_tags.get_user_badge(AnonymousUser(), self.user), expected
         )
 
     def test_get_project_badge(self):
@@ -584,13 +676,6 @@ class TestProjectrolesCommonTags(TemplateTagTestBase):
         )
 
     # TODO: Test get_remote_icon() (need to set up remote projects)
-
-    def test_render_markdown(self):
-        """Test render_markdown()"""
-        raw_md = '**Some markdown**'
-        self.assertEqual(
-            c_tags.render_markdown(raw_md), mistune.markdown(raw_md)
-        )
 
     def test_force_wrap(self):
         """Test force_wrap()"""
@@ -1038,6 +1123,13 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'active': False,
                 },
                 {
+                    'name': 'userprofile_list',
+                    'url': reverse('userprofile:list'),
+                    'label': 'User List',
+                    'icon': 'mdi:account-multiple-outline',
+                    'active': False,
+                },
+                {
                     'name': 'logout',
                     'url': reverse('logout'),
                     'label': 'Logout',
@@ -1132,6 +1224,13 @@ class TestProjectrolesTags(TemplateTagTestBase):
                     'url': reverse('userprofile:detail'),
                     'label': 'User Profile',
                     'icon': 'mdi:account-details',
+                    'active': False,
+                },
+                {
+                    'name': 'userprofile_list',
+                    'url': reverse('userprofile:list'),
+                    'label': 'User List',
+                    'icon': 'mdi:account-multiple-outline',
                     'active': False,
                 },
                 {

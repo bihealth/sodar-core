@@ -5,6 +5,92 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.5.0 (2026-11-12)
+===================
+
+Added
+-----
+
+- **General**
+    - Python v3.14 support (#1948)
+    - setuptools-scm dependency (#1995)
+- **Projectroles**
+    - ``Project.title_slug`` field (#1931)
+    - ``PROJECTROLES_TITLE_SLUG_MAX_LEN`` Django setting (#1931)
+    - ``ProjectSerializer`` ``title_slug`` field support (#1931)
+    - ``ProjectForm`` ``title_slug`` field support (#1931, #2015)
+    - ``ProjectTitleSlugRedirectView`` view (#1931)
+    - ``ProjectUUIDRetrieveAPIView`` REST API view (#1931)
+    - ``updatetitleslugs`` management command (#1931)
+    - Project operations dropdown in project header (#2012, #2013)
+    - ``ProjectListAjaxView`` mutual project list retrieval support (#2000)
+    - Project list public access project toggling (#2007)
+    - ``project_list_public_display`` app setting (#2007)
+    - ``get_user_html()`` and ``get_user_badge()`` user profile linking (#1999)
+    - ``PROJECTROLES_USER_PROFILE_LINK`` Django setting (#1999)
+    - ``wait_for_icon_update()`` UI test helper (#1998)
+- **Timeline**
+    - ``TimelineEvent`` ``core_version`` and ``site_version`` fields (#1963)
+- **Userprofile**
+    - ``UserListView`` view for user browsing (#1984, #2026, #2035, #2036)
+    - ``UserListSiteAppPlugin`` plugin (#1984)
+    - ``UserDetailView`` back navigation (#1984, #1999, #2033)
+    - ``UserDetailView`` user project list (#2000)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Django v5.2.19 (#1993)
+    - Upgrade general Python dependencies (#1993)
+    - Set Python v3.14 as default version (#1948)
+    - Replace versioneer with setuptools-scm (#1995, #1997, #2022)
+    - Disable parallel testing in ``Makefile`` (#2011)
+- **Projectroles**
+    - Upgrade projectroles REST API version to v2.1 (#1931)
+    - Upgrade projectroles sync REST API version to v2.2 (#1931)
+    - Update project header layout (#2012)
+    - Disable project list page control if list is empty (#2023)
+    - Move search results loading spinner to view header (#2001)
+    - Update Markdown preview placeholder text (#2008, #2043)
+- **Timeline**
+    - Upgrade timeline REST API version to v2.1 (#1963)
+- **Userprofile**
+    - Update ``UserDetailView`` access for other users (#1855)
+
+Fixed
+-----
+
+- **Filesfolders**
+    - REST API view parameter docs (#1991)
+- **Projectroles**
+    - Incorrect URLs and user checks in category permission tests (#2014)
+    - ``AppSettingAPI`` missing ``project_types`` checks (#2009)
+    - ``PluginAppSettingDef`` ``project_types`` set without project scope (#2017)
+    - ``Project.readme`` update fails with empty value (#2019)
+    - App setting update REST API views fail with boolean string values (#2024)
+    - ``confirm_delete_host.html`` button alignment (#2028)
+    - ``ProjectDeleteView`` success message capitalization (#2029)
+    - ``ProjectSearchResultsView`` unwanted altering of search term case in UI (#2002)
+    - ``Project.has_public_children`` not updated on child creation (#2037)
+
+Removed
+-------
+
+- **General**
+    - Python v3.11 support (#1994)
+    - django-docs dependency (#1996)
+    - versioneer dependency (#1995)
+    - xmlsec1 dependency for previously removed SAML support (#1992)
+    - mistune dependency (#1991)
+- **Projectroles**
+    - Kiosk mode support (#1775)
+    - ``PROJECTROLES_KIOSK_MODE`` env var (#1775)
+    - ``render_markdown()`` common template tag (#1892)
+- **Userprofile**
+    - ``enable_project_uuid_copy`` app setting (#2013)
+
+
 v1.4.5 (2026-09-16)
 ===================
 

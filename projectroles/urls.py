@@ -36,6 +36,11 @@ urls_ui = [
         view=views.ProjectDeleteView.as_view(),
         name='delete',
     ),
+    path(
+        route='go/<str:slug>',
+        view=views.ProjectTitleSlugRedirectView.as_view(),
+        name='title_slug_redirect',
+    ),
     # Search views
     path(
         route='search/results/',
@@ -48,11 +53,6 @@ urls_ui = [
         name='search_advanced',
     ),
     # Project role views
-    path(
-        route='members/<uuid:project>',
-        view=views.ProjectRoleView.as_view(),
-        name='roles',
-    ),
     path(
         route='members/<uuid:project>',
         view=views.ProjectRoleView.as_view(),
@@ -186,6 +186,11 @@ urls_ajax = [
         name='ajax_project_list',
     ),
     path(
+        route='ajax/list/<uuid:user>',
+        view=views_ajax.ProjectListAjaxView.as_view(),
+        name='ajax_project_list_mutual',
+    ),
+    path(
         route='ajax/list/columns',
         view=views_ajax.ProjectListColumnAjaxView.as_view(),
         name='ajax_project_list_columns',
@@ -280,6 +285,11 @@ urls_api = [
         route='api/destroy/<uuid:project>',
         view=views_api.ProjectDestroyAPIView.as_view(),
         name='api_project_destroy',
+    ),
+    path(
+        route='api/project-uuid/retrieve/<str:slug>',
+        view=views_api.ProjectUUIDRetrieveAPIView.as_view(),
+        name='api_project_uuid_retrieve',
     ),
     path(
         route='api/roles/create/<uuid:project>',

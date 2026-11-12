@@ -7,8 +7,7 @@ Package metadata for django-sodar-core.
 
 import os
 from setuptools import setup
-
-import versioneer
+from setuptools_scm import get_version
 
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
@@ -52,8 +51,9 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
 setup(
     name='django-sodar-core',
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    version=get_version(
+        version_scheme='only-version', local_scheme='no-local-version'
+    ),
     description="""SODAR Core framework and project management apps""",
     long_description=README,
     long_description_content_type='text/x-rst',
@@ -84,11 +84,11 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
-    python_requires='>=3.11',
+    python_requires='>=3.12',
 )

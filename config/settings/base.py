@@ -62,7 +62,6 @@ THIRD_PARTY_APPS = [
     'knox',  # For token auth
     'social_django',  # For OIDC authentication
     'axes',  # Django-axes for login security
-    'docs',  # For the online user documentation/manual
     'db_file_storage',  # For filesfolders
     'dal',  # For user search combo box
     'dal_select2',
@@ -333,6 +332,9 @@ MARTOR_ENABLE_CONFIGS = {
     'spellcheck': env.str('MARTOR_ENABLE_CONFIG_SPELLCHECK', 'false'),
     'hljs': env.str('MARTOR_ENABLE_CONFIG_HLJS', 'false'),
 }
+MARTOR_PREVIEW_PLACEHOLDER = env.str(
+    'MARTOR_PREVIEW_PLACEHOLDER', 'Markdown preview'
+)
 # By default, martor loads bootstrap v5. We don't want that, so we supply an
 # alternative CSS file.
 MARTOR_ALTERNATIVE_CSS_FILE_THEME = env.str(
@@ -689,8 +691,6 @@ PROJECTROLES_SIDEBAR_ICON_SIZE = env.int('PROJECTROLES_SIDEBAR_ICON_SIZE', 36)
 # PROJECTROLES_SEARCH_PAGINATION = 5
 # Role list pagination
 PROJECTROLES_ROLE_PAGINATION = env.int('PROJECTROLES_ROLE_PAGINATION', 15)
-# Support for viewing the site in "kiosk mode" (experimental)
-# PROJECTROLES_KIOSK_MODE = env.bool('PROJECTROLES_KIOSK_MODE', False)
 # Scroll project navigation with page content if set False
 # PROJECTROLES_BREADCRUMB_STICKY = True
 # Custom message to be displayed if site read-only mode is enabled
@@ -701,6 +701,11 @@ PROJECTROLES_API_USER_DETAIL_RESTRICT = env.bool(
 )
 # Support contact to be displayed for users, overrides ADMINS. Set as name:email
 PROJECTROLES_SUPPORT_CONTACT = env.str('PROJECTROLES_SUPPORT_CONTACT', None)
+# Enable user HTML and badge user profile linking. Only applicable if the
+# userprofile app is enabled.
+PROJECTROLES_USER_PROFILE_LINK = env.bool(
+    'PROJECTROLES_USER_PROFILE_LINK', True
+)
 
 # Hide project apps from the UI (sidebar, dropdown menus and project details)
 PROJECTROLES_HIDE_PROJECT_APPS = env.list(
@@ -709,6 +714,10 @@ PROJECTROLES_HIDE_PROJECT_APPS = env.list(
 
 # Set limit for delegate roles per project (if 0, no limit is applied)
 PROJECTROLES_DELEGATE_LIMIT = env.int('PROJECTROLES_DELEGATE_LIMIT', 1)
+
+# Maximum length for project title slugs, used as human-friendly alias
+# NOTE: Supports values between 15 and 4096
+PROJECTROLES_TITLE_SLUG_MAX_LEN = env.int('PROJECTROLES_TITLE_SLUG_MAX_LEN', 80)
 
 # Warn about unsupported browsers (IE)
 PROJECTROLES_BROWSER_WARNING = env.bool('PROJECTROLES_BROWSER_WARNING', True)

@@ -1,5 +1,8 @@
 """API tests for the timeline app"""
 
+from importlib import import_module
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest
@@ -8,6 +11,7 @@ from django.test import RequestFactory
 from django.urls import reverse
 
 # Projectroles dependency
+from projectroles import __version__ as pr_version
 from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.plugins import PluginAPI
 from projectroles.tests.test_models import (
@@ -35,6 +39,7 @@ from timeline.tests.test_models import (
 
 
 plugin_api = PluginAPI()
+site = import_module(settings.SITE_PACKAGE)
 User = get_user_model()
 
 
@@ -106,6 +111,8 @@ class TestTimelineAPI(
             'description': 'description',
             'classified': False,
             'extra_data': EXTRA_DATA,
+            'site_version': site.__version__,
+            'core_version': pr_version,
             'sodar_uuid': event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(event), expected)
@@ -152,6 +159,8 @@ class TestTimelineAPI(
             'description': 'description',
             'classified': False,
             'extra_data': EXTRA_DATA,
+            'site_version': site.__version__,
+            'core_version': pr_version,
             'sodar_uuid': event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(event), expected_event)
@@ -224,6 +233,8 @@ class TestTimelineAPI(
             'description': 'description',
             'classified': False,
             'extra_data': EXTRA_DATA,
+            'site_version': site.__version__,
+            'core_version': pr_version,
             'sodar_uuid': event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(event), expected)

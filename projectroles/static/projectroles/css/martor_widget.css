@@ -51,8 +51,8 @@
 }
 
 /* Make the preview elements look like the rendered markdown */
-div.martor-preview {
-  background: rgba(0,123,255,.25);
+div.martor-preview, div.martor-preview-stale {
+  background: rgba(0,123,255,.25) !important;
   max-height: 250px;
   font-size: inherit !important;
 }

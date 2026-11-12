@@ -28,8 +28,8 @@ from django.views.generic import (
     DeleteView,
     View,
 )
+from django.views.generic.base import ContextMixin
 from django.views.generic.edit import ModelFormMixin, FormView
-from django.views.generic.detail import ContextMixin
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
@@ -163,14 +163,11 @@ SITE_SETTING_UPDATE_MSG = 'Site app settings updated.'
 
 class LoginRequiredMixin(AccessMixin):
     """
-    Override of Django LoginRequiredMixin to handle anonymous access and kiosk
-    mode.
+    Override of Django LoginRequiredMixin to handle anonymous access.
     """
 
     def is_login_required(self) -> bool:
-        if getattr(settings, 'PROJECTROLES_KIOSK_MODE', False) or getattr(
-            settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
-        ):
+        if getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False):
             return False
         return True
 
@@ -197,8 +194,6 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
         Override for this mixin also to work with admin users without a
         permission object.
         """
-        if getattr(settings, 'PROJECTROLES_KIOSK_MODE', False):
-            return True
         try:
             return super().has_permission()
         except AttributeError:
@@ -339,8 +334,10 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             self.request.user.is_superuser
             or project.is_owner_or_delegate(self.request.user)
         )
-        if not perm_override and app_settings.get(
-            APP_NAME, 'ip_restrict', project
+        if (
+            not perm_override
+            and project.is_project()
+            and app_settings.get(APP_NAME, 'ip_restrict', project)
         ):
             for k in (
                 'HTTP_X_FORWARDED_FOR',
@@ -446,9 +443,7 @@ class ProjectContextMixin(
         else:
             context['project'] = self.get_project()
         # Project tagging/starring
-        if context.get('project') and not getattr(
-            settings, 'PROJECTROLES_KIOSK_MODE', False
-        ):
+        if context.get('project'):
             context['project_starred'] = app_settings.get(
                 APP_NAME,
                 'project_star',
@@ -590,24 +585,81 @@ class ProjectListContextMixin:
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['project_custom_cols'] = self._get_custom_cols(
-            self.request.user
-        )
-        base_col_count = 1 if self.request.user.is_superuser else 2
+        user = self.request.user
+        context['project_custom_cols'] = self._get_custom_cols(user)
+        base_col_count = 1 if user.is_superuser else 2
         context['project_col_count'] = base_col_count + len(
             context['project_custom_cols']
         )
         context['page_options_default'] = app_settings.get(
-            APP_NAME, 'project_list_pagination', user=self.request.user
+            APP_NAME, 'project_list_pagination', user=user
         )
         if not self.kwargs.get('project'):
             starred_default = app_settings.get(
-                APP_NAME, 'project_list_home_starred', user=self.request.user
+                APP_NAME, 'project_list_home_starred', user=user
             )
         else:
             starred_default = False
         context['project_list_starred_default'] = starred_default
+        context['project_list_public_default'] = app_settings.get(
+            APP_NAME, 'project_list_public_display', user=user
+        )
         return context
+
+
+# Base Views -------------------------------------------------------------------
+
+
+class HostConfirmDeleteView(
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    HTTPRefererMixin,
+    DeleteView,
+):
+    """
+    Specialized deletion view with confirmation form asking for host name.
+
+    Set allow_delete=False in context data to display form but prohibit
+    deletion.
+    """
+
+    #: Custom override for this view's template
+    template_name = 'projectroles/confirm_delete_host.html'
+
+    #: URL for redirection after a successful deletion
+    success_url = reverse_lazy('home')
+
+    def get_object_display_name(self) -> str:
+        """Define a display name for the type of object"""
+        object = self.get_object()
+        return object.__class__.__name__
+
+    def get_context_data(self, *args, **kwargs):
+        """Override get_context_data()"""
+        context = super().get_context_data(*args, **kwargs)
+        context['object_display_name'] = self.get_object_display_name()
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        """Override dispatch() to check for correct host name before POST"""
+        if request.method == 'POST':
+            # Don't allow deletion unless user has input the host name
+            host_confirm = request.POST.get('delete_host_confirm')
+            actual_host = request.get_host().split(':')[0]
+            if not host_confirm or host_confirm != actual_host:
+                display_name = self.get_object_display_name()
+                msg = (
+                    f'Incorrect host name for confirming {display_name} '
+                    f'deletion: "{host_confirm}"'
+                )
+                logger.error(msg + f' (correct={actual_host})')
+                messages.error(
+                    request,
+                    f'Failed to delete {display_name}: Host name input '
+                    'incorrect.',
+                )
+                return redirect(request.path)
+        return super().dispatch(request, *args, **kwargs)
 
 
 # General Views ----------------------------------------------------------------
@@ -734,9 +786,10 @@ class ProjectSearchMixin:
         search_keywords = {}
 
         if self.request.POST.get('m'):  # Multi search
+            search_input = self.request.POST['m'].strip()
             search_terms = [
                 t.strip().strip('\'"')
-                for t in self.request.POST['m'].strip().split('\r\n')
+                for t in search_input.split('\r\n')
                 if len(t.strip().strip('\'"')) >= 3
             ]
             if self.request.POST.get('k'):
@@ -748,18 +801,25 @@ class ProjectSearchMixin:
                 if ':' in token:
                     keyword_input.append(token)
                 else:
-                    search_terms.append(token.lower())
+                    search_terms.append(token)
 
         search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
 
+        invalid_keywords = []
         for s in keyword_input:
-            kw = s.split(':')[0].lower().strip()
-            val = s.split(':')[1].lower().strip()
+            if ':' not in s:
+                invalid_keywords.append(s)
+                continue
+            kw, val = s.rsplit(':', 1)
+            kw = kw.strip().lower()
+            val = val.strip().lower()
             search_keywords[kw] = val
 
         context['search_input'] = search_input
+        context['keyword_input'] = '; '.join(keyword_input)
         context['search_terms'] = search_terms
         context['search_keywords'] = search_keywords
+        context['invalid_keywords'] = invalid_keywords
 
         plugins = plugin_api.get_active_plugins(plugin_type='project_app')
         omit_apps_list = getattr(settings, 'PROJECTROLES_SEARCH_OMIT_APPS', [])
@@ -822,6 +882,13 @@ class ProjectSearchResultsView(
         context = self.get_context_data(*args, **kwargs)
         if not context['search_terms']:
             messages.error(request, 'No search terms provided.')
+            return redirect(reverse('home'))
+        if invalid_keywords := context['invalid_keywords']:
+            messages.error(
+                request,
+                'Invalid search keywords provided: '
+                f'{", ".join(invalid_keywords)}.',
+            )
             return redirect(reverse('home'))
         return super().render_to_response(context)
 
@@ -918,6 +985,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
             'readme': project.readme,
             'owner': project.get_owner().user,
             'public_access': project.public_access,
+            'title_slug': project.title_slug,
         }
 
     @classmethod
@@ -1004,6 +1072,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         """
         extra_data = {}
         upd_fields = []
+        # TODO: Refactor
         if old_data['title'] != project.title:
             extra_data['title'] = project.title
             upd_fields.append('title')
@@ -1019,6 +1088,9 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
         if old_data['public_access'] != project.public_access:
             extra_data['public_access'] = project.get_public_access_name()
             upd_fields.append('public_access')
+        if old_data['title_slug'] != project.title_slug:
+            extra_data['title_slug'] = project.title_slug
+            upd_fields.append('title_slug')
 
         # Remote projects
         if (
@@ -1142,6 +1214,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 'owner': owner.username,
                 'description': project.description,
                 'readme': project.readme,
+                'title_slug': project.title_slug,
             }
             # Add settings to extra data
             for k, v in project_settings.items():
@@ -1320,12 +1393,13 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 data.get('description') or old_project.description
             )
             project.type = data.get('type') or old_project.type
-            project.readme = data.get('readme') or old_project.readme
+            project.readme = data.get('readme', '')
             # NOTE: Must do this as parent can exist but be None
             project.parent = (
                 data['parent'] if 'parent' in data else old_project.parent
             )
             project.public_access = data.get('public_access')
+            project.title_slug = data.get('title_slug', '')
         else:
             project = Project(
                 title=data.get('title'),
@@ -1334,6 +1408,7 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 readme=data.get('readme'),
                 parent=data.get('parent'),
                 public_access=data.get('public_access'),
+                title_slug=data.get('title_slug', ''),
             )
             project.save()
 
@@ -1400,11 +1475,15 @@ class ProjectModifyMixin(ProjectModifyPluginViewMixin):
                 'perform_project_modify', 'revert_project_modify', args
             )
 
-        # If public access was updated, update has_public_children for parents
+        # If public access was updated, or if the project was created
+        # with public access, update has_public_children for parents
         if (
             old_project
             and project.parent
             and old_project.public_access != project.public_access
+            or not old_project
+            and project.parent
+            and project.public_access
         ):
             try:
                 project._update_public_children()
@@ -1862,58 +1941,6 @@ class ProjectArchiveView(
         return redirect(redirect_url)
 
 
-class HostConfirmDeleteView(
-    LoginRequiredMixin,
-    LoggedInPermissionMixin,
-    HTTPRefererMixin,
-    DeleteView,
-):
-    """
-    Specialized deletion view with confirmation form asking for host name.
-
-    Set allow_delete=False in context data to display form but prohibit
-    deletion.
-    """
-
-    #: Custom override for this view's template
-    template_name = 'projectroles/confirm_delete_host.html'
-
-    #: URL for redirection after a successful deletion
-    success_url = reverse_lazy('home')
-
-    def get_object_display_name(self) -> str:
-        """Define a display name for the type of object"""
-        object = self.get_object()
-        return object.__class__.__name__
-
-    def get_context_data(self, *args, **kwargs):
-        """Override get_context_data()"""
-        context = super().get_context_data(*args, **kwargs)
-        context['object_display_name'] = self.get_object_display_name()
-        return context
-
-    def dispatch(self, request, *args, **kwargs):
-        """Override dispatch() to check for correct host name before POST"""
-        if request.method == 'POST':
-            # Don't allow deletion unless user has input the host name
-            host_confirm = request.POST.get('delete_host_confirm')
-            actual_host = request.get_host().split(':')[0]
-            if not host_confirm or host_confirm != actual_host:
-                display_name = self.get_object_display_name()
-                msg = (
-                    f'Incorrect host name for confirming {display_name} '
-                    f'deletion: "{host_confirm}"'
-                )
-                logger.error(msg + f' (correct={actual_host})')
-                messages.error(
-                    request,
-                    f'Failed to delete {display_name}: Host name input '
-                    'incorrect.',
-                )
-                return redirect(request.path)
-        return super().dispatch(request, *args, **kwargs)
-
-
 class ProjectDeleteView(
     ProjectContextMixin,
     ProjectDeleteMixin,
@@ -1949,11 +1976,11 @@ class ProjectDeleteView(
     def post(self, *args, **kwargs):
         """Delete the project and redirect the user"""
         project = self.get_object()
-        display_name = self.get_object_display_name()
+        p_name = self.get_object_display_name()
         try:
             with transaction.atomic():
                 self.handle_delete(project, self.request)
-            messages.success(self.request, f'{display_name} deleted.')
+            messages.success(self.request, f'{p_name.capitalize()} deleted.')
             # We cannot put the following in self.get_success_url() since
             # we need access to the object which has just been deleted
             if project.parent:
@@ -1967,10 +1994,43 @@ class ProjectDeleteView(
         except Exception as ex:
             if settings.DEBUG:
                 raise ex
-            messages.error(
-                self.request, f'Failed to delete {display_name}: {ex}'
-            )
+            messages.error(self.request, f'Failed to delete {p_name}: {ex}')
             return redirect(reverse('home'))
+
+
+class ProjectTitleSlugRedirectView(
+    LoginRequiredMixin, LoggedInPermissionMixin, View
+):
+    """
+    View to redirect user from human-readable project title slug into
+    ProjectDetailView.
+    """
+
+    http_method_names = ['get']
+    permission_required = 'projectroles.view_project'
+    project = None
+
+    def get_permission_object(self):
+        return self.project
+
+    def has_permission(self):
+        slug_kw = self.kwargs.get('slug', '').strip()
+        if not slug_kw:
+            return False
+        try:
+            self.project = Project.objects.get(title_slug=slug_kw)
+        except Project.DoesNotExist:
+            # Return 403 instead of 404 to avoid revealing project titles
+            return False
+        return super().has_permission()
+
+    def get(self, request, *args, **kwargs):
+        return redirect(
+            reverse(
+                'projectroles:detail',
+                kwargs={'project': self.project.sodar_uuid},
+            )
+        )
 
 
 # RoleAssignment Views ---------------------------------------------------------

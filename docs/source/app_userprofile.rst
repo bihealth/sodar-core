@@ -6,6 +6,8 @@ Userprofile App
 
 The ``userprofile`` app is a site app which provides a user profile view for
 projectroles compatible Django users and management of user specific settings.
+The app allows viewing an updating a user's account and settings, as well as
+listing and viewing of profiles of other users on the site.
 
 
 Installation
@@ -47,10 +49,10 @@ In the Django URL configuration file, add the following line under
         url(r'^user/', include('userprofile.urls')),
     ]
 
-Register Plugin
----------------
+Register Plugins
+----------------
 
-To register the app plugin, run the following management command:
+To register the app plugins, run the following management command:
 
 .. code-block:: console
 
@@ -60,15 +62,23 @@ You should see the following output:
 
 .. code-block:: console
 
-    Registering Plugin for userprofile.plugins.ProjectAppPlugin
+    Registering Plugin for userprofile.plugins.SiteAppPlugin
+    Registering Plugin for userprofile.plugins.UserListSiteAppPlugin
 
 
 Usage
 =====
 
-After successful installation, the link for "User Profile" should be available
-in the user dropdown menu in the top-right corner of the website UI after you
-have logged in.
+After successful installation, two additional links should be available in the
+user dropdown menu:
+
+:guilabel:`User Profile`
+    Link to your own user profile.
+:guilabel:`User List`
+    List of all users on the site.
+
+User Profile
+------------
 
 The user detail view displays user account details and additional emails, along
 with links to update user settings, add additional email addresses or update
@@ -80,9 +90,18 @@ user details. The last option is only available for local Django user accounts.
 
     User details view
 
+If you are viewing the profile of another user, the same view will be shown
+with some differences. Updating actions or additional emails will not be
+available. In addition to user details, a list of mutually accessible projects
+between the viewed user and you will be displayed.
+
+Viewing another user's profile as a superuser, additional email addresses will
+be displayed and the project list contains all the projects to which the user
+has access.
+
 
 User Settings
-=============
+"""""""""""""
 
 User settings are configured in the ``app_settings`` dictionary in your project
 app plugins.
@@ -92,9 +111,6 @@ using sites:
 
 Receive email for admin alerts
     Receive email for :ref:`admin alerts <app_adminalerts>`.
-Display project UUID copying link
-    If set true, display a link in the project title bar for copying the project
-    UUID into the clipboard.
 Receive alerts for project updates
     Receive app alerts in the SODAR UI for project or category creation,
     updating, moving and archiving.
@@ -109,18 +125,21 @@ Receive email for project membership updates
     invitation activity.
 Project list title highlight
     Highlight project title in paths displayed in the project list.
-Project list page size
-    Amount of projects per page in the project list.
+Display public access projects in project list
+    Display public access projects in the project list. Public projects with
+    a local role set for you will always be displayed.
 Display user name in user dropdown
     Display the user name of the currently logged in user in the title bar
     user dropdown link. Useful for users with mulitple accounts.
+Project list page size
+    Amount of projects per page in the project list.
 
 In the development setup, the SODAR Core example site apps also provide
 additional settings for demonstrating settings features.
 
 
 Additional Emails
-=================
+"""""""""""""""""
 
 The user can configure additional emails for their user account in case they
 want to receive automated emails to addresses other than their primary address.
@@ -140,3 +159,16 @@ receive automated emails from the site.
 
 For each email address displayed in the list, there are controls to re-send the
 verification email (in case of an unverified email) and deleting the address.
+
+
+User List
+---------
+
+The User List view shows a table with basic information for all the users in the
+site. By default, each username links to the profile of the corresponding user.
+
+.. figure:: _static/app_userprofile/sodar_user_list.png
+    :align: center
+    :scale: 60%
+
+    User list view

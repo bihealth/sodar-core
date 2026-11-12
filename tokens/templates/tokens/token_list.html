@@ -102,24 +102,24 @@
     tourEnabled = true
     tour.addStep('tokens', {
       title: 'API Tokens App',
-      text: 'In this application you can create and manage API tokens to be ' +
-            'used with the REST API endpoints of the site. Tokens are user ' +
-            'specific and may have an expiry date. You can also set an ' +
-            'optional text label for each token.',
+      text: `In this application you can create and manage API tokens to be
+      used with the REST API endpoints of the site. Tokens are user specific and
+      may have an expiry date. You can also set an optional text label for each
+      token.`,
       advanceOn: '.docs-link click',
       showCancelLink: true
     })
     tour.addStep('token_create', {
       title: 'Create Token',
-      text: 'To create a new API token, click on this button and follow the ' +
-            'instructions in the displayed forms.',
+      text: `To create a new API token, click on this button and follow the
+      instructions in the displayed forms.`,
       attachTo: '#sodar-tk-create-btn left',
       advanceOn: '.docs-link click',
       showCancelLink: true
     })
     tour.addStep('token_list', {
       title: 'Token List',
-      text: 'Tokens you have created can be seen in this list.',
+      text: `Tokens you have created can be seen in this list.`,
       attachTo: '#sodar-tk-list-table top',
       advanceOn: '.docs-link click',
       showCancelLink: true
@@ -127,8 +127,8 @@
     if ($('.sodar-tk-delete-btn').length) {
       tour.addStep('delete_token', {
         title: 'Delete Token',
-        text: 'You can delete a token by clicking on the corresponding ' +
-              'delete button.',
+        text: `You can delete a token by clicking on the corresponding delete
+        button.`,
         attachTo: '.sodar-tk-delete-btn left',
         advanceOn: '.docs-link click',
         showCancelLink: true

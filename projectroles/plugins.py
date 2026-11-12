@@ -781,7 +781,10 @@ class PluginAppSettingDef:
         self.options = options or []
         self.user_modifiable = user_modifiable
         self.global_edit = global_edit
-        self.project_types = project_types or [PROJECT_TYPE_PROJECT]
+        if scope in [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_PROJECT_USER]:
+            self.project_types = project_types or [PROJECT_TYPE_PROJECT]
+        else:
+            self.project_types = []
         self.widget_attrs = widget_attrs or {}
 
     @classmethod

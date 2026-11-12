@@ -10,6 +10,126 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.5.0 (2026-11-12)
+*******************
+
+Release Highlights
+==================
+
+- Add user list view
+- Add user profile viewing support for other users
+- Add user project list in user profile when viewed by others
+- Add project operations dropdown in project header
+- Add project title slug field
+- Add human-readable project title slug URL support
+- Add project list public access project toggling
+- Add timeline event version fields
+- Add updatetitleslugs management command
+- Add Python v3.14 support
+- Update project header layout
+- Replace versioneer with setuptools-scm
+- Upgrade general dependencies
+- Fix missing project type checks in app settings API
+- Fix app setting API update REST API views with boolean values
+- Remove kiosk mode support
+- Remove Python v3.11 support
+
+Breaking Changes
+================
+
+App Settings API Project Type Checks Fixed
+------------------------------------------
+
+The ``project_types`` parameter of app settings definitions was not correctly
+checked for in multiple ``AppSettingAPI`` methods. The API has been fixed to
+work as expected. However, returned results may differ from previous
+implementations if the API has been used incorrectly. Please verify your API
+calls.
+
+Affected methods:
+
+- ``get()``
+- ``get_all_by_scope()``
+- ``get_defaults()``
+- ``is_set()``
+
+Template Tags get_user_html() and get_user_badge() Updated
+----------------------------------------------------------
+
+These template tags in ``projectroles_common_tags`` have changed signatures.
+They now return different values based on the requesting user.
+
+``get_user_badge()``
+    ``User`` object added as first mandatory argument. This object must
+    correspond to the requesting user.
+``get_user_html()``
+    ``HttpRequest`` object added as second optional argument.
+
+Kiosk Mode Removed
+------------------
+
+Support for "kiosk mode" via ``PROJECTROLES_KIOSK_MODE`` has been removed. The
+setting no longer takes effect. This mode was experimental and not fully
+developed or tested and to our knowledge, it is not currently used by any SODAR
+Core based project.
+
+To set up public demonstration data, we recommend setting
+``PROJECTROLES_ALLOW_ANONYMOUS=1`` and enabling public guest access to desired
+demo project(s).
+
+If there is need for functionality similar to the original kiosk mode, we
+recommend opening a ticket in the issue tracker describing your use case.
+
+REST API View Changes
+---------------------
+
+- Projectroles API
+    * Current version: ``2.1`` (non-breaking changes)
+    * Allowed versions: ``1.0``, ``1.1``, ``2.0``, ``2.1``
+    * ``ProjectCreateAPIView``
+        + Add ``title_slug`` field (optional)
+    * ``ProjectRetrieveAPIView``
+        + Add ``title_slug`` field
+    * ``ProjectUpdateAPIView``
+        + Add ``title_slug`` field (optional)
+    * ``ProjectUUIDRetrieveAPIView``
+        + Add view
+- Projectroles sync API
+    * Current version: ``2.2`` (non-breaking changes)
+    * Allowed versions: ``1.0``, ``2.0``, ``2.1``, ``2.2``
+    * Add ``Project.title_slug`` field synchronization
+    * **NOTE:** If called with API version ``<2.2``, title slugs will not be
+      synced to target sites.
+- Timeline API
+    * Current version: ``2.1`` (non-breaking changes)
+    * Allowed versions: ``2.0``, ``2.1``
+    * ``TimelineEventRetrieveAPIView``
+        + Add ``core_version`` and ``site_version`` fields
+
+System Prerequisites
+--------------------
+
+Python v3.14 Support Added
+    Python v3.14 support has been officially added in this version. 3.14 is now
+    the recommended Python version.
+Python v3.11 Support Dropped
+    This release no longer supports Python <v3.12.
+General Python Dependencies
+    Third party Python package dependencies have been upgraded. See the
+    ``requirements`` directory for up-to-date package versions and upgrade your
+    project.
+Django Version
+    The minimum Django version has been bumped to v5.2.19.
+
+Previously Deprecated Features Removed
+--------------------------------------
+
+These features were deprecated in v1.4 and have been removed in v1.5.
+
+Template Tag ``render_markdown()``
+    This template tag was removed. Use the ``safe_markdown`` filter from the
+    ``martor`` package.
+
 v1.4.5 (2026-09-16)
 *******************
 
@@ -208,7 +328,8 @@ REST API View Changes
     * Current version: ``2.1`` (non-breaking changes)
     * Allowed versions: ``1.0``, ``2.0``, ``2.1``
     * Add synchonization of ``is_active`` field for users
-    * **NOTE:** If called with API version ``1.0`` or ``2.0``, user activity status will not be synced to target sites.
+    * **NOTE:** If called with API version ``1.0`` or ``2.0``, user activity
+      status will not be synced to target sites.
     * **NOTE:** The activity status for superusers is not synced.
 
 System Prerequisites

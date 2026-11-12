@@ -24,7 +24,7 @@ All Timeline Events
 
 .. figure:: _static/app_timeline/sodar_timeline.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Timeline project event list view
 

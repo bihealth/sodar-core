@@ -245,6 +245,7 @@ class TestGetSourceData(
                     'title': self.project.title,
                     'type': PROJECT_TYPE_PROJECT,
                     'level': REMOTE_LEVEL_VIEW_AVAIL,
+                    'title_slug': self.project.title_slug,
                     'available': True,
                     'remote_sites': [],
                 }
@@ -277,6 +278,7 @@ class TestGetSourceData(
                     'parent_uuid': None,
                     'description': self.category.description,
                     'readme': self.category.readme,
+                    'title_slug': self.category.title_slug,
                 },
                 str(self.project.sodar_uuid): {
                     'title': self.project.title,
@@ -284,6 +286,7 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_INFO,
                     'description': self.project.description,
                     'readme': self.project.readme,
+                    'title_slug': self.project.title_slug,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'remote_sites': [str(self.peer_site.sodar_uuid)],
                 },
@@ -324,6 +327,7 @@ class TestGetSourceData(
                     'parent_uuid': None,
                     'description': self.category.description,
                     'readme': self.category.readme,
+                    'title_slug': self.category.title_slug,
                 },
                 str(sub_category.sodar_uuid): {
                     'title': sub_category.title,
@@ -332,6 +336,7 @@ class TestGetSourceData(
                     'parent_uuid': str(self.category.sodar_uuid),
                     'description': sub_category.description,
                     'readme': sub_category.readme,
+                    'title_slug': sub_category.title_slug,
                 },
                 str(self.project.sodar_uuid): {
                     'title': self.project.title,
@@ -339,6 +344,7 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_INFO,
                     'description': self.project.description,
                     'readme': self.project.readme,
+                    'title_slug': self.project.title_slug,
                     'parent_uuid': str(sub_category.sodar_uuid),
                     'remote_sites': [],
                 },
@@ -407,6 +413,7 @@ class TestGetSourceData(
                     'parent_uuid': None,
                     'description': self.category.description,
                     'readme': self.category.readme,
+                    'title_slug': self.category.title_slug,
                     'roles': {
                         str(self.category_owner_as.sodar_uuid): {
                             'user': self.user_source.username,
@@ -420,6 +427,7 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_READ_ROLES,
                     'description': self.project.description,
                     'readme': self.project.readme,
+                    'title_slug': self.project.title_slug,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'roles': {
                         str(self.project_owner_as.sodar_uuid): {
@@ -455,6 +463,13 @@ class TestGetSourceData(
         )
         self.get_kw['req_version'] = '2.0'
         sync_data = self.remote_api.get_source_data(**self.get_kw)
+        # The tile_slug field should not be present
+        self.assertNotIn(
+            'title_slug', sync_data['projects'][str(self.category.sodar_uuid)]
+        )
+        self.assertNotIn(
+            'title_slug', sync_data['projects'][str(self.project.sodar_uuid)]
+        )
         # Active status should not be present
         self.assertNotIn(
             'is_active',
@@ -799,6 +814,7 @@ class TestGetSourceData(
                     'parent_uuid': None,
                     'description': self.category.description,
                     'readme': self.category.readme,
+                    'title_slug': self.category.title_slug,
                 },
                 str(self.project.sodar_uuid): {
                     'title': self.project.title,
@@ -806,6 +822,7 @@ class TestGetSourceData(
                     'level': REMOTE_LEVEL_REVOKED,
                     'description': self.project.description,
                     'readme': self.project.readme,
+                    'title_slug': self.project.title_slug,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'roles': {
                         str(self.project_owner_as.sodar_uuid): {
@@ -922,6 +939,7 @@ class SyncRemoteDataTestBase(
                     'parent_uuid': None,
                     'description': SOURCE_PROJECT_DESCRIPTION,
                     'readme': SOURCE_PROJECT_README,
+                    'title_slug': 'testcategory',
                     'roles': {
                         SOURCE_CATEGORY_ROLE_UUID: {
                             'user': SOURCE_USER_USERNAME,
@@ -935,6 +953,7 @@ class SyncRemoteDataTestBase(
                     'level': REMOTE_LEVEL_READ_ROLES,
                     'description': SOURCE_PROJECT_DESCRIPTION,
                     'readme': SOURCE_PROJECT_README,
+                    'title_slug': 'testproject',
                     'parent_uuid': SOURCE_CATEGORY_UUID,
                     'roles': {
                         SOURCE_PROJECT_ROLE_UUID: {
@@ -1101,6 +1120,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'public_access': None,
             'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE,
+            'title_slug': 'testcategory',
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
@@ -1118,12 +1138,39 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'public_access': None,
             'archive': False,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
+            'title_slug': 'testproject',
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
         model_dict = model_to_dict(project_obj)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
+
+    def test_create_assert_projects_empty_title_slug(self):
+        """Test sync for creation with empty title slugs"""
+        self._update_remote_data()
+        self.remote_data['projects'][SOURCE_CATEGORY_UUID]['title_slug'] = ''
+        self.remote_data['projects'][SOURCE_PROJECT_UUID]['title_slug'] = ''
+        self.remote_api.sync_remote_data(self.source_site, self.remote_data)
+        category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
+        self.assertEqual(category_obj.title_slug, '')
+        project_obj = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
+        self.assertEqual(project_obj.title_slug, '')
+
+    def test_create_assert_projects_no_title_slug(self):
+        """Test sync for creation with no title slugs"""
+        self._update_remote_data()
+        self.remote_data['projects'][SOURCE_CATEGORY_UUID].pop(
+            'title_slug', None
+        )
+        self.remote_data['projects'][SOURCE_PROJECT_UUID].pop(
+            'title_slug', None
+        )
+        self.remote_api.sync_remote_data(self.source_site, self.remote_data)
+        category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
+        self.assertEqual(category_obj.title_slug, '')
+        project_obj = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
+        self.assertEqual(project_obj.title_slug, '')
 
     def test_create_assert_category_roles(self):
         """Test sync for creation and assert category role changes"""
@@ -1430,6 +1477,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
 
         new_project_uuid = str(uuid.uuid4())
         new_project_title = 'New Project Title'
+        new_project_slug = 'new-project-title'
         new_role_uuid = str(uuid.uuid4())
         self.remote_data['projects'][new_project_uuid] = {
             'title': new_project_title,
@@ -1437,6 +1485,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'level': REMOTE_LEVEL_READ_ROLES,
             'description': SOURCE_PROJECT_DESCRIPTION,
             'readme': SOURCE_PROJECT_README,
+            'title_slug': new_project_slug,
             'parent_uuid': SOURCE_CATEGORY_UUID,
             'roles': {
                 new_role_uuid: {
@@ -1466,6 +1515,7 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             'public_access': None,
             'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE + ' / ' + new_project_title,
+            'title_slug': new_project_slug,
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(new_project_uuid),
         }
@@ -1853,6 +1903,49 @@ class TestSyncRemoteDataCreate(SyncRemoteDataTestBase):
             self.remote_data['users'][SOURCE_USER_UUID]['status'], 'created'
         )
 
+    def test_create_assert_projects_v2_0(self):
+        """Test sync for project changes with API v2.0"""
+        self.assertEqual(Project.objects.all().count(), 0)
+        self._update_remote_data()
+        self.remote_api.sync_remote_data(self.source_site, self.remote_data)
+        self.assertEqual(Project.objects.all().count(), 2)
+
+        category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
+        expected = {
+            'id': category_obj.pk,
+            'title': SOURCE_CATEGORY_TITLE,
+            'type': PROJECT_TYPE_CATEGORY,
+            'description': SOURCE_PROJECT_DESCRIPTION,
+            'parent': None,
+            'public_access': None,
+            'archive': False,
+            'full_title': SOURCE_CATEGORY_TITLE,
+            'title_slug': 'testcategory',
+            'has_public_children': False,
+            'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
+        }
+        model_dict = model_to_dict(category_obj)
+        model_dict.pop('readme', None)
+        self.assertEqual(model_dict, expected)
+
+        project_obj = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
+        expected = {
+            'id': project_obj.pk,
+            'title': SOURCE_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'description': SOURCE_PROJECT_DESCRIPTION,
+            'parent': category_obj.pk,
+            'public_access': None,
+            'archive': False,
+            'full_title': SOURCE_PROJECT_FULL_TITLE,
+            'title_slug': 'testproject',
+            'has_public_children': False,
+            'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
+        }
+        model_dict = model_to_dict(project_obj)
+        model_dict.pop('readme', None)
+        self.assertEqual(model_dict, expected)
+
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestSyncRemoteDataUpdate(
@@ -2032,6 +2125,7 @@ class TestSyncRemoteDataUpdate(
             'public_access': None,
             'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE,
+            'title_slug': 'testcategory',
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
@@ -2049,12 +2143,55 @@ class TestSyncRemoteDataUpdate(
             'public_access': None,
             'archive': False,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
+            'title_slug': 'testproject',
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
         model_dict = model_to_dict(self.project_obj)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
+
+    def test_update_assert_projects_empty_title_slug(self):
+        """Test sync for project changes with empty title slugs"""
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.category_obj.title_slug = 'new-category-title'
+        self.category_obj.save()
+        self.project_obj.title_slug = 'new-project-title'
+        self.project_obj.save()
+
+        self._update_remote_data()
+        self.remote_data['projects'][SOURCE_CATEGORY_UUID]['title_slug'] = ''
+        self.remote_data['projects'][SOURCE_PROJECT_UUID]['title_slug'] = ''
+        self.remote_api.sync_remote_data(self.source_site, self.remote_data)
+
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.category_obj.refresh_from_db()
+        self.assertEqual(self.category_obj.title_slug, '')
+        self.project_obj.refresh_from_db()
+        self.assertEqual(self.project_obj.title_slug, '')
+
+    def test_update_assert_projects_no_title_slug(self):
+        """Test sync for project changes with empty title slugs"""
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.category_obj.title_slug = 'new-category-title'
+        self.category_obj.save()
+        self.project_obj.title_slug = 'new-project-title'
+        self.project_obj.save()
+
+        self._update_remote_data()
+        self.remote_data['projects'][SOURCE_CATEGORY_UUID].pop(
+            'title_slug', None
+        )
+        self.remote_data['projects'][SOURCE_PROJECT_UUID].pop(
+            'title_slug', None
+        )
+        self.remote_api.sync_remote_data(self.source_site, self.remote_data)
+        self.assertEqual(Project.objects.all().count(), 2)
+        # Existing title slugs should be maintained
+        self.category_obj.refresh_from_db()
+        self.assertEqual(self.category_obj.title_slug, 'new-category-title')
+        self.project_obj.refresh_from_db()
+        self.assertEqual(self.project_obj.title_slug, 'new-project-title')
 
     def test_update_assert_roles(self):
         """Test sync for update and assert role changes"""
@@ -2610,6 +2747,7 @@ class TestSyncRemoteDataUpdate(
             'public_access': None,
             'archive': False,
             'full_title': SOURCE_CATEGORY_TITLE,
+            'title_slug': 'testcategory',
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
@@ -2637,6 +2775,7 @@ class TestSyncRemoteDataUpdate(
             'public_access': None,
             'archive': False,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
+            'title_slug': 'testproject',
             'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }

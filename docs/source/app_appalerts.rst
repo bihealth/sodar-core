@@ -119,7 +119,7 @@ appear on the top bar of the site.
 
 .. figure:: _static/app_appalerts/app_alerts.png
     :align: center
-    :scale: 50%
+    :scale: 55%
 
     App alert list and title bar notification
 

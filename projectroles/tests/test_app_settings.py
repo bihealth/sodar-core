@@ -402,7 +402,10 @@ class TestAppSettingAPI(
         for k, v in all_defs.items():
             p_vals = [v for v in vals if v.startswith(S_PREFIX.format(k))]
             s_defs = [
-                d for d in v.values() if d.scope == APP_SETTING_SCOPE_PROJECT
+                d
+                for d in v.values()
+                if d.scope == APP_SETTING_SCOPE_PROJECT
+                and PROJECT_TYPE_PROJECT in d.project_types
             ]
             self.assertEqual(len(p_vals), len(s_defs))
             for s_def in s_defs:
@@ -847,7 +850,7 @@ class TestAppSettingAPI(
             'user_modifiable': True,
             'global_edit': False,
             'options': [],
-            'project_types': [PROJECT_TYPE_PROJECT],
+            'project_types': [],  # No project type for USER scope setting
             'widget_attrs': {},
         }
         s_def = app_settings.get_definition(

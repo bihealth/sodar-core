@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
 from django.core import mail
 from django.db.models import QuerySet
-from django.forms import CheckboxInput, HiddenInput
+from django.forms import CheckboxInput, HiddenInput, TextInput
 from django.forms.models import model_to_dict
 from django.test import override_settings
 from django.urls import reverse
@@ -144,6 +144,7 @@ INVALID_SETTING_VALUE = 'INVALID VALUE'
 LDAP_DOMAIN = 'EXAMPLE'
 NEW_CAT_TITLE = 'NewCategory'
 PROJECT_TITLE = 'TestProject'
+PROJECT_TITLE_SLUG = 'test-project'
 
 LOGIN_PASSWORD = 'loginpassword'
 INVALID_PASSWORD = 'INVALID_PASSWORD'
@@ -187,6 +188,14 @@ APP_SETTINGS_TEST = [
         scope=APP_SETTING_SCOPE_SITE,
         type=APP_SETTING_TYPE_BOOLEAN,
         default=False,
+        user_modifiable=True,
+        global_edit=False,
+    ),
+    PluginAppSettingDef(
+        name='project_list_public_display',
+        scope=APP_SETTING_SCOPE_USER,
+        type=APP_SETTING_TYPE_BOOLEAN,
+        default=True,
         user_modifiable=True,
         global_edit=False,
     ),
@@ -257,6 +266,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
         # User settings
         self.assertEqual(rc['page_options_default'], 10)
         self.assertEqual(rc['project_list_starred_default'], False)
+        self.assertEqual(rc['project_list_public_default'], True)
         # Sidebar defaults
         self.assertEqual(rc['sidebar_icon_size'], 36)
         self.assertEqual(rc['sidebar_notch_pos'], 12)
@@ -289,14 +299,23 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['project_list_starred_default'], True)
 
+    def test_get_public_default_update(self):
+        """Test GET with project_list_public_display=False"""
+        app_settings.set(
+            APP_NAME, 'project_list_public_display', False, user=self.user_owner
+        )
+        with self.login(self.user_owner):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project_list_public_default'], False)
+
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MIN_SIZE - 2)
     def test_get_sidebar_icon_size_min(self):
         """Test GET context for sidebar icon size with value below minimum"""
         with self.login(self.user):
             response = self.client.get(self.url)
             self.assertEqual(
-                response.context['sidebar_icon_size'],
-                SIDEBAR_ICON_MIN_SIZE,
+                response.context['sidebar_icon_size'], SIDEBAR_ICON_MIN_SIZE
             )
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MAX_SIZE + 2)
@@ -305,8 +324,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
         with self.login(self.user):
             response = self.client.get(self.url)
             self.assertEqual(
-                response.context['sidebar_icon_size'],
-                SIDEBAR_ICON_MAX_SIZE,
+                response.context['sidebar_icon_size'], SIDEBAR_ICON_MAX_SIZE
             )
 
     @override_settings(PROJECTROLES_SIDEBAR_ICON_SIZE=SIDEBAR_ICON_MIN_SIZE)
@@ -382,6 +400,11 @@ class TestProjectSearchResultsView(
 ):
     """Tests for ProjectSearchResultsView"""
 
+    @classmethod
+    def _get_url(cls, query: dict):
+        """Return URL with search query"""
+        return reverse('projectroles:search') + '?' + urlencode(query)
+
     def setUp(self):
         super().setUp()
         self.category = self.make_project(
@@ -395,9 +418,7 @@ class TestProjectSearchResultsView(
     def test_get(self):
         """Test ProjectSearchResultsView GET"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
-            )
+            response = self.client.get(self._get_url({'s': 'test'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {})
@@ -411,11 +432,7 @@ class TestProjectSearchResultsView(
     def test_get_quoted(self):
         """Test GET with quoted search term"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': '"test quoted"'})
-            )
+            response = self.client.get(self._get_url({'s': '"test quoted"'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test quoted'])
         self.assertEqual(response.context['search_keywords'], {})
@@ -429,14 +446,11 @@ class TestProjectSearchResultsView(
     def test_get_search_type(self):
         """Test GET with search type"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test type:file'})
-            )
+            response = self.client.get(self._get_url({'s': 'test type:file'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {'type': 'file'})
+        self.assertEqual(response.context['keyword_input'], 'type:file')
         self.assertEqual(response.context['search_input'], 'test type:file')
         self.assertEqual(
             [p['name'] for p in response.context['search_apps']],
@@ -451,15 +465,17 @@ class TestProjectSearchResultsView(
         """Test GET with keywords"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': f'test project:{self.project.sodar_uuid}'})
+                self._get_url({'s': f'test project:{self.project.sodar_uuid}'})
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(
             response.context['search_keywords'],
             {'project': str(self.project.sodar_uuid)},
+        )
+        self.assertEqual(
+            response.context['keyword_input'],
+            f'project:{self.project.sodar_uuid}',
         )
         self.assertEqual(
             response.context['search_input'],
@@ -475,17 +491,17 @@ class TestProjectSearchResultsView(
         """Test GET with quoted keywords"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test "test quoted" project:"white space"'})
+                self._get_url({'s': 'test "test quoted" project:"white space"'})
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context['search_terms'], ['test', 'test quoted']
         )
         self.assertEqual(
-            response.context['search_keywords'],
-            {'project': 'white space'},
+            response.context['search_keywords'], {'project': 'white space'}
+        )
+        self.assertEqual(
+            response.context['keyword_input'], 'project:white space'
         )
         self.assertEqual(
             response.context['search_input'],
@@ -501,15 +517,16 @@ class TestProjectSearchResultsView(
         """Test GET with project keyword title value"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': f'test project:"{self.project.title}"'})
+                self._get_url({'s': f'test project:"{self.project.title}"'})
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(
             response.context['search_keywords'],
             {'project': self.project.title.lower()},
+        )
+        self.assertEqual(
+            response.context['keyword_input'], f'project:{self.project.title}'
         )
         self.assertEqual(
             response.context['search_input'],
@@ -525,15 +542,17 @@ class TestProjectSearchResultsView(
         """Test GET with project keywoard title value for category"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': f'test project:"{self.category.title}"'})
+                self._get_url({'s': f'test project:"{self.category.title}"'})
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(
             response.context['search_keywords'],
             {'project': self.category.title.lower()},
+        )
+        self.assertEqual(
+            response.context['keyword_input'],
+            f'project:{self.category.title}',
         )
         self.assertEqual(
             response.context['search_input'],
@@ -547,19 +566,12 @@ class TestProjectSearchResultsView(
 
     def test_get_search_string_parsing(self):
         """Test GET search string parsing with complex input"""
+        s = (
+            'key1:value1  "term with spaces"\t'
+            'key2:"value2 with spaces"\t term2\n"key3:value3"'
+        )
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode(
-                    {
-                        's': (
-                            'key1:value1  "term with spaces"\t'
-                            'key2:"value2 with spaces"\t term2\n"key3:value3"'
-                        )
-                    }
-                )
-            )
+            response = self.client.get(self._get_url({'s': s}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context['search_terms'], ['term with spaces', 'term2']
@@ -567,6 +579,10 @@ class TestProjectSearchResultsView(
         self.assertEqual(
             response.context['search_keywords'],
             {'key1': 'value1', 'key2': 'value2 with spaces', 'key3': 'value3'},
+        )
+        self.assertEqual(
+            response.context['keyword_input'],
+            'key1:value1; key2:value2 with spaces; key3:value3',
         )
         self.assertEqual(
             response.context['search_input'],
@@ -582,20 +598,37 @@ class TestProjectSearchResultsView(
         )
 
     def test_get_keyword_missing(self):
-        """Test GET with incomplete keyword missing the value"""
+        """Test GET with value missing from keyword"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test project:'})
-            )
+            response = self.client.get(self._get_url({'s': 'test project:'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {'project': ''})
+        self.assertEqual(response.context['keyword_input'], 'project:')
         self.assertEqual(response.context['search_input'], 'test project:')
 
+    def test_get_upper_case_terms(self):
+        """Test GET with upper case terms"""
+        with self.login(self.user):
+            response = self.client.get(
+                self._get_url({'s': f'Test Project:{self.project.title}'})
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['search_terms'], ['Test'])
+        self.assertEqual(
+            response.context['search_keywords'],
+            {'project': self.project.title.lower()},
+        )
+        self.assertEqual(
+            response.context['keyword_input'], f'Project:{self.project.title}'
+        )
+        self.assertEqual(
+            response.context['search_input'],
+            f'Test Project:{self.project.title}',
+        )
+
     def test_get_non_text_input(self):
-        """Test GET with non-text input from standard search (should redirect)"""
+        """Test GET with non-text input from standard search"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:search') + '?s=+++'
@@ -606,26 +639,18 @@ class TestProjectSearchResultsView(
     def test_get_disabled(self):
         """Test GET with disabled search"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
-            )
+            response = self.client.get(self._get_url({'s': 'test'}))
             self.assertRedirects(response, reverse('home'))
 
     def test_get_omit_app(self):
         """Test GET with omitted app"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
-            )
+            response = self.client.get(self._get_url({'s': 'test'}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['search_apps']), 3)
         with override_settings(PROJECTROLES_SEARCH_OMIT_APPS=['timeline']):
             with self.login(self.user):
-                response = self.client.get(
-                    reverse('projectroles:search')
-                    + '?'
-                    + urlencode({'s': 'test'})
-                )
+                response = self.client.get(self._get_url({'s': 'test'}))
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.context['search_apps']), 2)
             self.assertNotIn(
@@ -637,26 +662,20 @@ class TestProjectSearchResultsView(
         """Test GET with invalid type"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test type:Jaix1au'})
+                self._get_url({'s': 'test type:Jaix1au'})
             )
             self.assertEqual(response.context['search_apps'], [])
 
     def test_get_no_terms(self):
         """Test GET with no search terms"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': ''})
-            )
+            response = self.client.get(self._get_url({'s': ''}))
             self.assertRedirects(response, reverse('home'))
 
     def test_post_wrong_payload(self):
-        """Test ProjectSearchView POST with wrong payload"""
+        """Test POST with wrong payload"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'m': 'test'})
-            )
+            response = self.client.get(self._get_url({'m': 'test'}))
             # Search views take either GET with 's' parameter or POST
             # with 'm' and 'k' parameters. Hence, GET with 'm' parameter
             # results in redirection.
@@ -666,25 +685,28 @@ class TestProjectSearchResultsView(
 class TestProjectAdvancedSearchView(UIViewTestBase):
     """Tests for ProjectAdvancedSearchView"""
 
+    def setUp(self):
+        super().setUp()
+        self.url = reverse('projectroles:search_advanced')
+
     def test_get(self):
         """Test ProjectAdvancedSearchView GET"""
         with self.login(self.user):
-            response = self.client.get(reverse('projectroles:search_advanced'))
+            response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
 
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
     def test_get_disabled(self):
         """Test GET with disabled search"""
         with self.login(self.user):
-            response = self.client.get(reverse('projectroles:search_advanced'))
+            response = self.client.get(self.url)
             self.assertRedirects(response, reverse('home'))
 
     def test_post(self):
         """Test POST"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={'m': 'cats\r\ndogs', 'k': 'type:project'},
+                self.url, data={'m': 'cats\r\ndogs', 'k': 'type:project'}
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['cats', 'dogs'])
@@ -696,14 +718,14 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
     def test_post_disabled(self):
         """Test POST with disabled search"""
         with self.login(self.user):
-            response = self.client.post(reverse('projectroles:search_advanced'))
+            response = self.client.post(self.url)
             self.assertRedirects(response, reverse('home'))
 
     def test_post_with_search_type_and_keywords(self):
-        """Test POST from ProjectAdvancedSearchView with keywords"""
+        """Test POST with keywords"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
+                self.url,
                 data={
                     'm': 'testcategory\r\ntestproject\r\nxxx',
                     'k': 'type:project project:title',
@@ -718,13 +740,15 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
             response.context['search_keywords'],
             {'project': 'title', 'type': 'project'},
         )
+        self.assertEqual(
+            response.context['keyword_input'], 'type:project; project:title'
+        )
 
     def test_post_advanced_short_input(self):
         """Test POST with short term (< 3 characters)"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={'m': 'testproject\r\nxx', 'k': ''},
+                self.url, data={'m': 'testproject\r\nxx', 'k': ''}
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['testproject'])
@@ -734,8 +758,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test POST with empty term (should be ignored)"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={'m': 'testproject\r\nxxx\r\n', 'k': ''},
+                self.url, data={'m': 'testproject\r\nxxx\r\n', 'k': ''}
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -747,8 +770,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test POST with duplicate term"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={'m': 'xxx\r\nxxx', 'k': ''},
+                self.url, data={'m': 'xxx\r\nxxx', 'k': ''}
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['xxx'])
@@ -757,7 +779,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         """Test POST with duplicate keyword term"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
+                self.url,
                 data={'m': 'testproject', 'k': 'project:UUID1 project:UUID2'},
             )
         self.assertEqual(response.status_code, 200)
@@ -767,25 +789,30 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
             response.context['search_keywords'],
             {'project': 'uuid2'},
         )
+        self.assertEqual(
+            response.context['keyword_input'], 'project:UUID1; project:UUID2'
+        )
 
     def test_post_advanced_invalid_project_keyword(self):
         """Test POST with invalid UUID for project keyword"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
-                data={'m': 'xxx', 'k': 'project:NOT_A_UUID'},
+                self.url, data={'m': 'xxx', 'k': 'project:NOT_A_UUID'}
             )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['search_terms'], ['xxx'])
         self.assertEqual(
             response.context['search_keywords'], {'project': 'not_a_uuid'}
         )
+        self.assertEqual(
+            response.context['keyword_input'], 'project:NOT_A_UUID'
+        )
 
     def test_post_advanced_search_string_parsing(self):
-        """Test POST from ProjectAdvancedSearchView with a challenging string"""
+        """Test POST with challenging string"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
+                self.url,
                 data={
                     'm': 'test with spaces\r\ntestproject\r\nxxx',
                     'k': 'type:project project:"project with spaces"',
@@ -794,7 +821,7 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.context['search_input'],
-            '',
+            'test with spaces\r\ntestproject\r\nxxx',
         )
         self.assertEqual(
             response.context['search_terms'],
@@ -804,12 +831,16 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
             response.context['search_keywords'],
             {'project': 'project with spaces', 'type': 'project'},
         )
+        self.assertEqual(
+            response.context['keyword_input'],
+            'type:project; project:project with spaces',
+        )
 
     def test_post_advanced_search_quoted_string_parsing(self):
         """Test POST from ProjectAdvancedSearchView with quoted search terms"""
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:search_advanced'),
+                self.url,
                 data={
                     'm': 'alert test\r\n"alert test"',
                     'k': '',
@@ -819,6 +850,21 @@ class TestProjectAdvancedSearchView(UIViewTestBase):
         self.assertEqual(
             response.context['search_terms'],
             ['alert test'],
+        )
+
+    def test_post_advanced_search_keyword_without_colon(self):
+        """Test POST with invalid keyword input (missing colon)"""
+        with self.login(self.user):
+            response = self.client.post(
+                self.url,
+                data={
+                    'm': 'test',
+                    'k': 'type:project project',
+                },
+            )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Invalid search keywords provided: project.',
         )
 
 
@@ -1042,6 +1088,7 @@ class TestProjectCreateView(
         self.url = reverse(
             'projectroles:create', kwargs={'project': self.category.sodar_uuid}
         )
+        self.timeline = plugin_api.get_backend_api('timeline_backend')
 
     def test_get_top(self):
         """Test ProjectCreateView GET with top level category creation form"""
@@ -1058,6 +1105,7 @@ class TestProjectCreateView(
         self.assertIsInstance(
             form.fields[CAT_PUBLIC_STATS_FIELD].widget, CheckboxInput
         )
+        self.assertIsInstance(form.fields['title_slug'].widget, HiddenInput)
 
     @override_settings(PROJECTROLES_DISABLE_CATEGORIES=True)
     def test_get_top_disable_categories(self):
@@ -1118,6 +1166,7 @@ class TestProjectCreateView(
         self.assertIsInstance(
             form.fields[CAT_PUBLIC_STATS_FIELD].widget, HiddenInput
         )
+        self.assertIsInstance(form.fields['title_slug'].widget, HiddenInput)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_get_sub_target_remote(self):
@@ -1136,6 +1185,7 @@ class TestProjectCreateView(
         form = response.context['form']
         self.assertNotIn(REMOTE_SITE_FIELD, form.fields)
         self.assertNotIn(f'remote_site.{peer_site.sodar_uuid}', form.fields)
+        self.assertIsInstance(form.fields['title_slug'].widget, HiddenInput)
 
     @override_settings(PROJECTROLES_SITE_MODE='TARGET')
     @override_settings(PROJECTROLES_TARGET_CREATE=False)
@@ -1231,6 +1281,7 @@ class TestProjectCreateView(
             'public_access': None,
             'archive': False,
             'full_title': NEW_CAT_TITLE,
+            'title_slug': 'newcategory',
             'has_public_children': False,
             'sodar_uuid': category.sodar_uuid,
         }
@@ -1290,6 +1341,7 @@ class TestProjectCreateView(
             'public_access': None,
             'archive': False,
             'full_title': 'TestCategory / TestProject',
+            'title_slug': 'testproject',
             'has_public_children': False,
             'sodar_uuid': project.sodar_uuid,
         }
@@ -1333,6 +1385,42 @@ class TestProjectCreateView(
         self.assertEqual(model_to_dict(owner_as), expected)
         self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_post_project_tl_event(self):
+        """Test POST for project creation timeline event"""
+        data = self.get_project_create_data(
+            title=PROJECT_TITLE,
+            project_type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=self.user,
+        )
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.count(), 2)
+        project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
+
+        tl_event = (
+            self.timeline.get_project_events(project).order_by('-pk').first()
+        )
+        self.assertEqual(tl_event.event_name, 'project_create')
+        expected = {
+            'title': project.title,
+            'owner': self.user.username,
+            'description': project.description,
+            'readme': project.readme,
+            'title_slug': project.title_slug,
+        }
+        expected.update(
+            app_settings.get_all_by_scope(
+                APP_SETTING_SCOPE_PROJECT, project=project
+            )
+        )
+        # HACK: Pop unexpected settings from get_all_by_scope() (see #2009)
+        expected.pop('settings.example_project_app.category_bool_setting', None)
+        expected.pop('settings.projectroles.category_public_stats', None)
+        self.assertEqual(tl_event.extra_data, expected)
 
     def test_post_project_different_owner(self):
         """Test POST for project with different owner"""
@@ -1590,7 +1678,7 @@ class TestProjectCreateView(
         self.assertEqual(Project.objects.count(), 1)
 
     def test_post_project_public_stats(self):
-        """Test POST for project with category_public_stats (should fail)"""
+        """Test POST for project with category_public_stats"""
         self.assertEqual(Project.objects.count(), 1)
         data = self.get_project_create_data(
             title=PROJECT_TITLE,
@@ -1601,8 +1689,16 @@ class TestProjectCreateView(
         data[CAT_PUBLIC_STATS_FIELD] = True
         with self.login(self.user):
             response = self.client.post(reverse('projectroles:create'), data)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(Project.objects.count(), 1)
+        # Submit succeeds, but object should not be created
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.count(), 2)
+        self.assertEqual(
+            AppSetting.objects.filter(
+                name='category_public_stats',
+                project=Project.objects.get(type=PROJECT_TYPE_PROJECT),
+            ).exists(),
+            False,
+        )
 
     def test_post_remote(self):
         """Test POST with added remote project"""
@@ -1661,6 +1757,26 @@ class TestProjectCreateView(
             TARGET_CREATE_DISABLED_MSG,
         )
         self.assertEqual(Project.objects.count(), 1)
+
+    def test_post_project_public_access(self):
+        """Test POST with public access"""
+        self.assertEqual(self.category.has_public_children, False)
+        data = self.get_project_create_data(
+            title=PROJECT_TITLE,
+            project_type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=self.user,
+        )
+        data['public_access'] = self.role_guest.pk
+        with self.login(self.user):
+            response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.count(), 2)
+        project = Project.objects.get(title=PROJECT_TITLE)
+        self.assertEqual(project.public_access, self.role_guest)
+        self.category.refresh_from_db()
+        # Assert the parent category has_public_children is set true
+        self.assertEqual(self.category.has_public_children, True)
 
 
 class TestProjectUpdateView(
@@ -1751,24 +1867,26 @@ class TestProjectUpdateView(
         self.post_data = model_to_dict(self.project)
         self.post_data.update(
             {
-                'title': 'updated title',
+                'title': 'Updated Title',
                 'description': 'updated description',
                 'owner': self.user.sodar_uuid,  # NOTE: Must add owner
                 'parent': self.category.sodar_uuid,  # NOTE: Must add parent
                 'public_access': '',  # NOTE: Must set to empty instead of None
                 'readme': '',  # NOTE: must set to empty instead of None
+                'title_slug': 'Updated Title',
                 REMOTE_SITE_FIELD: False,
             }
         )
         self.post_data_cat = model_to_dict(self.category)
         self.post_data_cat.update(
             {
-                'title': 'updated title',
+                'title': 'Updated Title',
                 'description': 'updated description',
                 'owner': self.user.sodar_uuid,
                 'parent': '',
                 'public_access': '',  # This gets passed in POST for category
                 'readme': '',
+                'title_slug': 'Updated Title',
             }
         )
         # NOTE: Set manually in tests instead if we need to test category with
@@ -1792,6 +1910,8 @@ class TestProjectUpdateView(
         self.assertNotIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertIsInstance(form.fields['owner'].widget, HiddenInput)
         self.assertEqual(form.fields[REMOTE_SITE_FIELD].initial, None)
+        # Title slug should be visible for updating
+        self.assertIsInstance(form.fields['title_slug'].widget, TextInput)
 
     def test_get_remote_site_user_display_disabled(self):
         """Test GET with user_display disabled on remote site"""
@@ -1831,6 +1951,7 @@ class TestProjectUpdateView(
         )
         form = response.context['form']
         self.assertEqual(form.fields[REMOTE_SITE_FIELD].initial, True)
+        self.assertIsInstance(form.fields['title_slug'].widget, TextInput)
 
     def test_get_remote_revoked(self):
         """Test GET with remote target project and REVOKED perm"""
@@ -1897,6 +2018,7 @@ class TestProjectUpdateView(
         self.assertNotIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertIsInstance(form.fields['owner'].widget, HiddenInput)
         self.assertNotIn(REMOTE_SITE_FIELD, form.fields)
+        self.assertIsInstance(form.fields['title_slug'].widget, TextInput)
 
     def test_get_category_no_children(self):
         """Test GET with category and no children"""
@@ -1925,6 +2047,7 @@ class TestProjectUpdateView(
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertIsInstance(form.fields['description'].widget, HiddenInput)
         self.assertIsInstance(form.fields['readme'].widget, HiddenInput)
+        self.assertIsInstance(form.fields['title_slug'].widget, HiddenInput)
         self.assertNotIn(REMOTE_SITE_FIELD, form.fields)
         self.assertNotIsInstance(
             form.fields[
@@ -2006,13 +2129,14 @@ class TestProjectUpdateView(
         self.project.refresh_from_db()
         expected = {
             'id': self.project.pk,
-            'title': 'updated title',
+            'title': 'Updated Title',
             'type': PROJECT_TYPE_PROJECT,
             'parent': category_new.pk,
             'description': 'updated description',
             'public_access': None,
             'archive': False,
-            'full_title': category_new.title + CAT_DELIMITER + 'updated title',
+            'full_title': category_new.title + CAT_DELIMITER + 'Updated Title',
+            'title_slug': 'updated-title',
             'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
         }
@@ -2053,6 +2177,7 @@ class TestProjectUpdateView(
         self.assertIn('title', tl_event.extra_data)
         self.assertIn('description', tl_event.extra_data)
         self.assertIn('parent', tl_event.extra_data)
+        self.assertNotIn('title_sug', tl_event.extra_data)
         self.assertNotIn('remote_sites', tl_event.description)
         self.assertNotIn('remote_sites', tl_event.extra_data)
         # No alert or mail, because the owner has not changed
@@ -2095,13 +2220,14 @@ class TestProjectUpdateView(
         self.project.refresh_from_db()
         expected = {
             'id': self.project.pk,
-            'title': 'updated title',
+            'title': 'Updated Title',
             'type': PROJECT_TYPE_PROJECT,
             'parent': category_new.pk,
             'description': 'updated description',
             'public_access': None,
             'archive': False,
-            'full_title': category_new.title + CAT_DELIMITER + 'updated title',
+            'full_title': category_new.title + CAT_DELIMITER + 'Updated Title',
+            'title_slug': 'updated-title',
             'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
         }
@@ -2191,14 +2317,110 @@ class TestProjectUpdateView(
         self.assertEqual(self.category.has_public_children, True)
 
     def test_post_project_public_stats(self):
-        """Test POST for project with category_public_stats (should fail)"""
-        # Add settings values
+        """Test POST for project with category_public_stats"""
         ps = self._get_post_app_settings(self.project, self.user)
         self.post_data.update(ps)
         self.post_data[CAT_PUBLIC_STATS_FIELD] = True
         with self.login(self.user):
             response = self.client.post(self.url, self.post_data)
-        self.assertEqual(response.status_code, 200)
+        # Submit succeeds, but object should not be created
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            AppSetting.objects.filter(
+                name='category_public_stats', project=self.project
+            ).exists(),
+            False,
+        )
+
+    def test_post_project_title_slug_unchanged(self):
+        """Test POST with unchanged title_slug"""
+        self.project.title_slug = 'test-project'
+        self.project.save()
+
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        self.post_data['title_slug'] = 'test-project'
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+
+        self.assertEqual(response.status_code, 302)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title_slug, 'test-project')
+
+    def test_post_project_title_slug_dupe(self):
+        """Test POST with duplicate title_slug"""
+        self.category.title_slug = 'test-slug'
+        self.category.save()
+        self.assertEqual(self.project.title_slug, '')
+
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        self.post_data['title_slug'] = 'test-slug'
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+
+        self.assertEqual(response.status_code, 200)  # Update should fail
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title_slug, '')
+
+    @override_settings(PROJECTROLES_TITLE_SLUG_MAX_LEN=10)
+    def test_post_project_title_slug_max_length(self):
+        """Test POST with title_slug longer than minimum length"""
+        self.assertEqual(self.project.title_slug, '')
+
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        self.post_data['title_slug'] = 'this-will-be-too-long-now'
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+
+        self.assertEqual(response.status_code, 200)  # Update should fail
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title_slug, '')
+
+    def test_post_project_title_slug_min_length(self):
+        """Test POST with title_slug shorter than minimum length"""
+        self.assertEqual(self.project.title_slug, '')
+
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        self.post_data['title_slug'] = 'test'
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+
+        self.assertEqual(response.status_code, 200)  # Update should fail
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title_slug, '')
+
+    def test_post_project_title_slug_empty(self):
+        """Test POST with empty title_slug"""
+        self.project.title_slug = 'test-project'
+        self.project.save()
+
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        self.post_data['title_slug'] = ''
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+
+        self.assertEqual(response.status_code, 302)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title_slug, '')
+
+    def test_post_project_readme_empty(self):
+        """Test POST with empty readme"""
+        self.project.readme = 'readme'
+        self.project.save()
+
+        self.post_data['readme'] = ''
+        ps = self._get_post_app_settings(self.project, self.user)
+        self.post_data.update(ps)
+        with self.login(self.user):
+            response = self.client.post(self.url, self.post_data)
+
+        self.assertEqual(response.status_code, 302)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.readme, '')
 
     def test_post_category(self):
         """Test POST with category"""
@@ -2216,13 +2438,14 @@ class TestProjectUpdateView(
 
         expected = {
             'id': self.category.pk,
-            'title': 'updated title',
+            'title': 'Updated Title',
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
             'description': 'updated description',
             'public_access': None,
             'archive': False,
-            'full_title': 'updated title',
+            'full_title': 'Updated Title',
+            'title_slug': 'updated-title',
             'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
         }
@@ -2863,14 +3086,12 @@ class TestProjectFormTarget(
             'settings.example_project_app.'
             'project_callable_setting_options': str(self.project.sodar_uuid),
             'owner': self.user.sodar_uuid,
-            'title': 'TestProject',
+            'title': 'Test Project',
             'type': PROJECT_TYPE_PROJECT,
+            'title_slug': 'test-project',
         }
         with self.login(self.user):
             response = self.client.post(self.url, data)
-
-        # Assert redirect
-        with self.login(self.user):
             self.assertRedirects(
                 response,
                 reverse(
@@ -3574,6 +3795,69 @@ class TestProjectDeleteView(
                 ),
             )
         self.assertEqual(Project.objects.count(), 2)
+
+
+class TestProjectTitleSlugRedirectView(
+    ProjectMixin, RoleAssignmentMixin, UIViewTestBase
+):
+    """Tests for ProjectTitleSlugRedirectView"""
+
+    def setUp(self):
+        super().setUp()
+        self.user_owner = self.make_user('user_owner')
+        self.category = self.make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self.make_assignment(
+            self.category, self.user_owner, self.role_owner
+        )
+        self.project = self.make_project(
+            'TestProject',
+            PROJECT_TYPE_PROJECT,
+            self.category,
+            title_slug=PROJECT_TITLE_SLUG,
+        )
+        self.owner_as = self.make_assignment(
+            self.project, self.user_owner, self.role_owner
+        )
+        self.url = reverse(
+            'projectroles:title_slug_redirect',
+            kwargs={'slug': self.project.title_slug},
+        )
+
+    def test_get(self):
+        """Test ProjectTitleSlugRedirectView GET as user with access"""
+        with self.login(self.user_owner):
+            response = self.client.get(self.url)
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+    def test_get_not_found(self):
+        """Test GET with slug not found in projects"""
+        url = reverse(
+            'projectroles:title_slug_redirect',
+            kwargs={'slug': 'this-is-not-a-valid-slug'},
+        )
+        with self.login(self.user_owner):
+            response = self.client.get(url)
+            # We redirect to home with a 403 instead of a 404 to avoid revealing
+            # project titles
+            self.assertRedirects(response, reverse('home'))
+
+    def test_get_empty_slug(self):
+        """Test GET with empty slug"""
+        url = reverse(
+            'projectroles:title_slug_redirect',
+            kwargs={'slug': ' '},
+        )  # Trying to pass whitespace as empty value
+        with self.login(self.user_owner):
+            response = self.client.get(url)
+            self.assertRedirects(response, reverse('home'))
 
 
 class TestProjectRoleView(

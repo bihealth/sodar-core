@@ -83,7 +83,7 @@
                     <td>
                       {% get_user_by_username u.username as user_obj %}
                       {% if user_obj %}
-                        {% get_user_html user_obj as user_html %}
+                        {% get_user_html user_obj request as user_html %}
                         {{ user_html | safe }}
                       {% else %}
                         {{ u.username }}
@@ -187,7 +187,7 @@
                       </td>
                       <td {% if r.status == 'deleted' %}class="text-strikethrough"{% endif %}>
                         {% if user_obj %}
-                          {% get_user_html user_obj as user_html %}
+                          {% get_user_html user_obj request as user_html %}
                           {{ user_html | safe }}
                         {% else %}
                           {{ r.user }}
@@ -244,7 +244,7 @@
                         {{ p_link | safe }}
                       {% elif a.user_uuid %}
                         {% get_user_by_uuid a.user_uuid as u_obj %}
-                        {% get_user_html u_obj as u_html %}
+                        {% get_user_html u_obj request as u_html %}
                         {{ u_html | safe }}
                       {% endif %}
                     </td>

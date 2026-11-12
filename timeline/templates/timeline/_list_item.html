@@ -24,7 +24,7 @@
     {% get_app_badge event plugin_lookup 'mr-1' as event_icon %}
     {{ event_icon|safe }}
     {% if event.user %}
-      {% get_user_badge event.user 'mr-1' as user_badge %}
+      {% get_user_badge request.user event.user 'mr-1' as user_badge %}
       {{ user_badge | safe }}
     {% endif %}
     {% if event.project and user.is_superuser and timeline_mode == 'admin' %}

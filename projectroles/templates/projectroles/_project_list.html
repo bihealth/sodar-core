@@ -4,24 +4,41 @@
 <div class="card" id="sodar-pr-project-list">
   <div class="card-header">
     <h4>
-      {% if not parent %}
+      {% if other_user %}
+        {% if request.user.is_superuser %}
+          <i class="iconify" data-icon="mdi:earth"></i>
+          User
+        {% elif request.user.is_authenticated %}
+          <i class="iconify" data-icon="mdi:account-supervisor"></i>
+          Mutual
+        {% endif %}
+      {% elif not parent %}
         <i class="iconify" data-icon="mdi:earth"></i>
         {% if request.user.is_superuser %}
-           All
+          All
         {% elif request.user.is_authenticated %}
           Your
         {% else %}
           Public
         {% endif %}
-          {% get_display_name 'PROJECT' title=True plural=True %}
       {% else %}
         <i class="iconify" data-icon="mdi:rhombus-split"></i>
-        {% get_display_name 'PROJECT' title=True plural=True %}
       {% endif %}
+      {% get_display_name 'PROJECT' title=True plural=True %}
       <div class="input-group sodar-header-input-group
-                  sodar-pr-project-list-input-group pull-right">
+                  sodar-pr-project-list-input-group{% if not user.is_authenticated %}-anon{% endif %}
+                  pull-right">
         {% if request.user.is_authenticated %}
           <div class="input-group-prepend">
+            <button class="btn btn-secondary"
+                    type="submit"
+                    id="sodar-pr-project-list-link-public"
+                    disabled="disabled"
+                    data-public-enabled="{{ project_list_public_default|yesno:'1,0' }}">
+              <i class="iconify"
+                 data-icon="mdi:earth{% if not project_list_public_default %}-off{% endif %}">
+              </i> Public
+            </button>
             <button class="btn btn-secondary"
                     type="submit"
                     id="sodar-pr-project-list-link-star"
@@ -51,10 +68,17 @@
   <div class="card-body p-0">
     <table class="table table-striped sodar-card-table sodar-pr-project-list-table"
            id="sodar-pr-project-list-table"
-           data-list-url="{% url 'projectroles:ajax_project_list' %}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}"
+           {% if other_user %}
+             {% url 'projectroles:ajax_project_list_mutual' user=other_user.sodar_uuid as list_url %}
+           {% else %}
+             {% url 'projectroles:ajax_project_list' as list_url %}
+           {% endif %}
+           data-list-url="{{ list_url }}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}"
            data-custom-col-url="{% url 'projectroles:ajax_project_list_columns' %}"
            data-role-url="{% url 'projectroles:ajax_project_list_roles' %}"
+           data-user-setting-set-url="{% url 'projectroles:api_user_setting_set' %}"
            data-parent="{% if parent %}{{ parent.sodar_uuid }}{% endif %}"
+           data-other-user="{% if other_user %}{{ other_user.sodar_uuid }}{% endif %}"
            data-starred-default="{{ project_list_starred_default|yesno:'1,0' }}">
       <thead id="sodar-pr-project-list-header">
         <tr class="sodar-pr-project-list-header">

@@ -38,17 +38,22 @@
 
 <div class="row sodar-pr-content-title pt-2">
   <h2 class="sodar-pr-content-title pt-auto">Search Results</h2>
-    <div class="sodar-pr-content-title-secondary text-muted">
-      for
-      {% if search_terms|length <= 5 %}
-        "{{ search_terms|join:'; ' }}"
-      {% else %}
-        multiple terms
-      {% endif %}
-      {% if 'type' in search_keywords %}
-        (type:{{ search_keywords.type }})
-      {% endif %}
-    </div>
+  <div class="sodar-pr-content-title-secondary text-muted">
+    for
+    {% if search_terms|length <= 5 %}
+      "{{ search_terms|join:'; ' }}"
+    {% else %}
+      multiple terms
+    {% endif %}
+    {% if keyword_input %}
+      ({{ keyword_input }})
+    {% endif %}
+  </div>
+  <div id="sodar-search-results-spinner" class="align-self-center ml-auto">
+    <i class="iconify spin text-secondary"
+       data-icon="mdi:loading" data-height="25">
+    </i>
+  </div>
 </div>
 
 <div class="container-fluid sodar-page-container">
@@ -67,11 +72,6 @@
            data-app-icon="{{ app.icon }}">
       </div>
     {% endfor %}
-    <div id="sodar-search-results-spinner" class="w-100 text-center">
-      <i class="iconify spin text-secondary"
-         data-icon="mdi:loading" data-height="42">
-      </i>
-    </div>
   {% endif %}
 </div>
 
@@ -96,17 +96,16 @@
     $(document).on('searchResultsLoaded', function() {
       tour.addStep('search_results', {
         title: 'Search Results',
-        text: 'Search results are displayed in this view. Found search items ' +
-              'are displayed in cards specific to different applications and ' +
-              'data types.',
+        text: `Search results are displayed in this view. Found search items are
+        displayed in cards specific to different applications and data types.`,
         advanceOn: '.docs-link click',
         showCancelLink: true
       })
       if ($('.sodar-search-card-body').length) {
         tour.addStep('search_card', {
           title: 'Search Results Card',
-          text: 'This is a search results card for specific data types from ' +
-                'an application.',
+          text: `This is a search results card for specific data types from an
+          application.`,
           attachTo: '.sodar-search-card-body top',
           advanceOn: '.docs-link click',
           showCancelLink: true
@@ -115,8 +114,8 @@
       if ($('.sodar-search-page-length').length) {
         tour.addStep('search_card_page_length', {
           title: 'Search Results Display Amount',
-          text: 'The maximum results to be displayed on each page of the ' +
-                'results card can be set here.',
+          text: `The maximum results to be displayed on each page of the results
+          card can be set here.`,
           attachTo: '.sodar-search-page-length left',
           advanceOn: '.docs-link click',
           showCancelLink: true
@@ -125,8 +124,8 @@
       if ($('.sodar-search-filter').length) {
         tour.addStep('search_card_filter', {
           title: 'Search Results Filtering',
-          text: 'The search results displayed in this results card can be ' +
-                'filtered by typing into this input box.',
+          text: `The search results displayed in this results card can be
+          filtered by typing into this input box.`,
           attachTo: '.sodar-search-filter left',
           advanceOn: '.docs-link click',
           showCancelLink: true
@@ -135,8 +134,8 @@
       if ($('th .dt-column-order').length) {
         tour.addStep('search_card_sort', {
           title: 'Search Result Sorting',
-          text: 'Results can be sorted by each column in an ascending or ' +
-                'descending order by clicking on these icons.',
+          text: `Results can be sorted by each column in an ascending or
+          descending order by clicking on these icons.`,
           attachTo: 'th .dt-column-order right',
           advanceOn: '.docs-link click',
           showCancelLink: true
@@ -154,8 +153,8 @@
       if ($('.sodar-paginate-button').length) {
         tour.addStep('search_paginate', {
           title: 'Search Pagination',
-          text: 'In case of a large number of results, they can be browsed ' +
-                'using this sub-page navigation.',
+          text: `In case of a large number of results, they can be browsed using
+          this sub-page navigation.`,
           attachTo: '.sodar-paginate-button left',
           advanceOn: '.docs-link click',
           showCancelLink: true
@@ -164,8 +163,8 @@
       if ($('.sodar-search-not-found-alert').length) {
         tour.addStep('search_not_found', {
           title: 'Data Not Found',
-          text: 'Data types in which we could not find anything are listed ' +
-                'here.',
+          text: `Data types for which we could not find anything are listed
+          here.`,
           attachTo: '.sodar-search-not-found-alert top',
           advanceOn: '.docs-link click',
           showCancelLink: true

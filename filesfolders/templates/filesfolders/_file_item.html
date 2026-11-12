@@ -57,7 +57,7 @@
   {# Description column #}
   <td>{{ item.description }}</td>
   {# Owner column #}
-  <td>{% get_user_html item.owner as user_html %}{{ user_html|safe }}</td>
+  <td>{% get_user_html item.owner request as user_html %}{{ user_html|safe }}</td>
   {# Date column #}
   <td>{{ item.date_modified|date:'Y-m-d H:i' }}</td>
   {% if not details_card_mode %}

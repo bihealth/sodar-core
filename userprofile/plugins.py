@@ -6,9 +6,9 @@ from django.contrib.auth import get_user_model
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import SiteAppPluginPoint, PluginAppSettingDef
+from projectroles.plugins import SiteAppPluginPoint
 
-from userprofile.urls import urlpatterns
+from userprofile.urls import urls_detail, urls_list
 
 
 User = get_user_model()
@@ -29,7 +29,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     title = 'User Profile'
 
     #: UI URLs
-    urls = urlpatterns
+    urls = urls_detail
 
     #: Iconify icon
     icon = 'mdi:account-details'
@@ -44,17 +44,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     app_permission = 'userprofile.view_detail'
 
     #: App setting definitions
-    app_settings = [
-        PluginAppSettingDef(
-            name='enable_project_uuid_copy',
-            scope=APP_SETTING_SCOPE_USER,
-            type=APP_SETTING_TYPE_BOOLEAN,
-            label='Display project UUID copying link',
-            description='Display link in project header to copy project UUID '
-            'into the clipboard.',
-            default=False,
-        )
-    ]
+    app_settings = []
 
     def get_messages(self, user: Optional[User] = None) -> list[dict]:
         """
@@ -64,3 +54,28 @@ class SiteAppPlugin(SiteAppPluginPoint):
         """
         messages = []
         return messages
+
+
+class UserListSiteAppPlugin(SiteAppPluginPoint):
+    """Projectroles plugin for registering the user list site app entry point"""
+
+    #: Name (used as plugin ID)
+    name = 'userprofile_list'
+
+    #: Title (used in templates)
+    title = 'User List'
+
+    #: UI URLs
+    urls = urls_list
+
+    #: Iconify icon
+    icon = 'mdi:account-multiple-outline'
+
+    #: Description string
+    description = 'List of users on the site'
+
+    #: Entry point URL ID
+    entry_point_url_id = 'userprofile:list'
+
+    #: Required permission for displaying the app
+    app_permission = 'userprofile.view_list'

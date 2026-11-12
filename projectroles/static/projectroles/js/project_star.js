@@ -3,7 +3,7 @@
 $(document).ready(function () {
   $('#sodar-pr-link-project-star').click(function () {
     $.post({
-      url: $(this).attr('star-url'),
+      url: $(this).attr('data-star-url'),
       method: 'POST',
       dataType: 'json'
     }).done(function (data) {

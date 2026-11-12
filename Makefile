@@ -89,7 +89,7 @@ spectacular:
 
 .PHONY: test
 test: collectstatic
-	$(MANAGE) test -v 2 --parallel --settings=config.settings.test $(arg)
+	$(MANAGE) test -v 2 --settings=config.settings.test $(arg)
 
 
 .PHONY: usage

@@ -1,0 +1,37 @@
+/* CSS for userprofile user list view */
+
+#sodar-up-user-list-page-length {
+  height: 30px;
+}
+
+#sodar-up-user-list-filter {
+  width: 150px;
+}
+
+table#sodar-up-user-list-table thead tr th:nth-child(4),
+table#sodar-up-user-list-table tbody tr td:nth-child(4) {
+  width: 140px;
+  white-space: nowrap;
+}
+table#sodar-tl-table tbody tr td:nth-child(2) {
+  width: 100%;
+}
+/* Responsive modifications */
+@media screen and (max-width: 1000px) {
+  table#sodar-up-user-list-table thead tr th:nth-child(4),
+  table#sodar-up-user-list-table tbody tr td:nth-child(4) {
+    display: none;
+  }
+}
+@media screen and (max-width: 850px) {
+  table#sodar-up-user-list-table thead tr th:nth-child(3),
+  table#sodar-up-user-list-table tbody tr td:nth-child(3) {
+    display: none;
+  }
+}
+@media screen and (max-width: 600px) {
+  table#sodar-up-user-list-table thead tr th:nth-child(2),
+  table#sodar-up-user-list-table tbody tr td:nth-child(2) {
+    display: none;
+  }
+}

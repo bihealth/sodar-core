@@ -1,5 +1,7 @@
 """Django Rest Framework serializers for the timeline app"""
 
+from packaging.version import parse as parse_version
+
 from rest_framework import serializers
 
 # Projectroles dependency
@@ -13,6 +15,9 @@ from timeline.models import (
     TimelineEventStatus,
     TimelineEventObjectRef,
 )
+
+
+VERSION_2_1 = parse_version('2.1')
 
 
 class ExtraDataRepresentationMixin:
@@ -108,8 +113,21 @@ class TimelineEventSerializer(
             'description',
             'extra_data',
             'classified',
+            'site_version',
+            'core_version',
             'status_changes',
             'event_objects',
             'sodar_uuid',
         ]
         read_only_fields = fields
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # Remove versions with API <2.1
+        if (
+            'request' in self.context
+            and parse_version(self.context['request'].version) < VERSION_2_1
+        ):
+            ret.pop('core_version', None)
+            ret.pop('site_version', None)
+        return ret

@@ -50,8 +50,12 @@ REMOTE_MODIFY_MSG = (
     'Modification of remote projects is not allowed, modify on the SOURCE site '
     'instead'
 )
+TITLE_SLUG_UNSUPPORTED_MSG = (
+    'Field title_slug is only supported in API version >=2.1'
+)
 VERSION_1_1 = parse_version('1.1')
 VERSION_2_0 = parse_version('2.0')
+VERSION_2_1 = parse_version('2.1')
 
 
 # Base Serializers -------------------------------------------------------------
@@ -431,6 +435,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
     public_guest_access = serializers.BooleanField(
         required=False, write_only=True
     )
+    title_slug = serializers.CharField(required=False, allow_blank=True)
     archive = serializers.BooleanField(read_only=True)
     roles = RoleAssignmentNestedListSerializer(
         read_only=True, many=True, source='get_roles'
@@ -454,6 +459,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'public_guest_access',
             'archive',
             'full_title',
+            'title_slug',
             'owner',
             'roles',
             'children',
@@ -600,7 +606,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             )
 
         # Set appropriate values depending on API version
-        if parse_version(self.context['request'].version) < VERSION_2_0:
+        if req_version < VERSION_2_0:
             if attrs['public_guest_access']:
                 role_guest = Role.objects.filter(
                     name=PROJECT_ROLE_GUEST
@@ -608,6 +614,15 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                 attrs['public_access'] = role_guest
             else:
                 attrs['public_access'] = None
+
+    def _validate_title_slug(self, attrs):
+        """Validate title_slug field"""
+        req_version = parse_version(self.context['request'].version)
+        if req_version < VERSION_2_1 and 'title_slug' in attrs:
+            raise serializers.ValidationError(TITLE_SLUG_UNSUPPORTED_MSG)
+        # If not included in the request, set value from existing instance
+        if 'title_slug' not in attrs and self.instance:
+            attrs['title_slug'] = self.instance.title_slug
 
     def validate(self, attrs):
         site_mode = getattr(
@@ -632,18 +647,14 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             raise serializers.ValidationError(
                 'Creation of local projects not allowed on this target site'
             )
-        # Validate parent
+        # Validate individual fields
         parent = attrs.get('parent')
         self._validate_parent(parent, attrs, current_user, disable_categories)
-        # Validate title
         self._validate_title(parent, attrs)
-        # Validate type
         self._validate_type(attrs)
-        # Validate and set owner
         self._validate_owner(attrs)
-        # Validate and update public_access
         self._validate_public_access(attrs)
-
+        self._validate_title_slug(attrs)
         return attrs
 
     def save(self, **kwargs):
@@ -670,7 +681,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         )
         user = self.context['request'].user
 
-        # Return only title, full title and UUID for projects with finder role
+        # Return only titles and UUID for projects with finder role
         if (
             project.is_project()
             and project.parent
@@ -681,11 +692,14 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                 parent_as
                 and parent_as.role.rank >= ROLE_RANKING[PROJECT_ROLE_FINDER]
             ):
-                return {
+                ret = {
                     'title': project.title,
                     'full_title': project.full_title,
                     'sodar_uuid': str(project.sodar_uuid),
                 }
+                if req_version >= VERSION_2_1:
+                    ret['title_slug'] = project.title_slug
+                return ret
 
         # Else return full serialization
         # Proper rendering of readme
@@ -711,6 +725,11 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             ret.pop('public_access', None)
         else:  # Else remove public_guest_access
             ret.pop('public_guest_access', None)
+        # Only return title_slug for API version >=2.1
+        if req_version >= VERSION_2_1:
+            ret['title_slug'] = project.title_slug
+        else:
+            ret.pop('title_slug', None)
         return ret
 
 

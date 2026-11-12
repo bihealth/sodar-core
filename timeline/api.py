@@ -176,7 +176,7 @@ class TimelineAPI:
         if obj_ref.object_model == 'User':
             try:
                 user = User.objects.get(sodar_uuid=obj_ref.object_uuid)
-                return f'{get_user_html(user)} {cls._get_history_link(obj_ref)}'
+                return f'{get_user_html(user, request)} {cls._get_history_link(obj_ref)}'
             except User.DoesNotExist:
                 return UNKNOWN_LABEL
 

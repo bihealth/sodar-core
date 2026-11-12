@@ -15,9 +15,9 @@ Timeline REST API Versioning
 Media Type
     ``application/vnd.bihealth.sodar-core.timeline+json``
 Current Version
-    ``2.0``
+    ``2.1``
 Accepted Versions
-    ``2.0``
+    ``2.0``, ``2.1``
 Header Example
     ``Accept: application/vnd.bihealth.sodar-core.timeline+json; version=x.y``
 
@@ -36,6 +36,12 @@ Timeline REST API Views
 
 Timeline REST API Version Changes
 =================================
+
+v2.1
+----
+
+- ``TimelineEventRetrieveAPIView``
+    * Add ``core_version`` and ``site_version`` fields
 
 v2.0
 ----

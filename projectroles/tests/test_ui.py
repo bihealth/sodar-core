@@ -415,22 +415,22 @@ class TestHomeView(ProjectUITestBase):
             ),
             False,
         )
-        (
-            app_settings.set(
-                plugin_name=APP_NAME,
-                setting_name='project_star',
-                value=True,
-                project=self.project,
-                user=self.user_owner,
-                validate=False,
-            ),
+        app_settings.set(
+            plugin_name=APP_NAME,
+            setting_name='project_star',
+            value=True,
+            project=self.project,
+            user=self.user_owner,
+            validate=False,
         )
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self.wait_for_icon_update()
         self.assertEqual(self._get_item_vis_count(), 2)
         button = self.selenium.find_element(
             By.ID, 'sodar-pr-project-list-link-star'
         )
         button.click()
+        time.sleep(0.5)  # TODO: Better delay here
         self.assertEqual(self._get_item_vis_count(), 1)
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-pr-project-list-message')
@@ -484,9 +484,106 @@ class TestHomeView(ProjectUITestBase):
         )
         self.assertEqual(f_input.get_attribute('value'), '')
 
+    def test_project_list_public_no_public(self):
+        """Test project list public access button with no public projects"""
+        self.assertEqual(
+            Project.objects.filter(public_access__isnull=False).count(), 0
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self.assertEqual(self._get_item_vis_count(), 2)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-public'
+        )
+        self.assertEqual(button.is_enabled(), False)  # Should be disabled
+
+    def test_project_list_public_access(self):
+        """Test public access button with public project and access"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        self.assertEqual(
+            Project.objects.filter(public_access__isnull=False).count(), 1
+        )
+        self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self.assertEqual(self._get_item_vis_count(), 2)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-public'
+        )
+        self.assertEqual(button.is_enabled(), False)  # Should still be disabled
+
+    def test_project_list_public_no_access(self):
+        """Test public access button with public project and no explicit access"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        self.assertEqual(
+            Project.objects.filter(public_access__isnull=False).count(), 1
+        )
+        self.login_and_redirect(
+            self.user_no_roles, self.url, **self.wait_kwargs
+        )
+        self.assertEqual(self._get_item_vis_count(), 2)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-public'
+        )
+        # Nothing but public-only access projects, should still be disabled
+        self.assertEqual(button.is_enabled(), False)
+
+    def test_project_list_public_mixed_access(self):
+        """Test public access button with public project and mixed access"""
+        self.project.public_access = self.role_guest
+        self.project.save()
+        category2 = self.make_project(
+            'TestCategory2', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category2, self.user_no_roles, self.role_guest)
+
+        self.login_and_redirect(
+            self.user_no_roles, self.url, **self.wait_kwargs
+        )
+        self.assertEqual(self._get_item_vis_count(), 3)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-public'
+        )
+        # Access and public-only projects, button should be enabled
+        self.assertEqual(button.is_enabled(), True)
+
+    def test_project_list_public_toggle(self):
+        """Test project list public access toggling"""
+        self.assertTrue(
+            app_settings.get(
+                APP_NAME, 'project_list_public_display', user=self.user_no_roles
+            )
+        )
+        self.project.public_access = self.role_guest
+        self.project.save()
+        category2 = self.make_project(
+            'TestCategory2', PROJECT_TYPE_CATEGORY, None
+        )
+        self.make_assignment(category2, self.user_no_roles, self.role_guest)
+
+        self.login_and_redirect(
+            self.user_no_roles, self.url, **self.wait_kwargs
+        )
+        self.assertEqual(self._get_item_vis_count(), 3)
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-public'
+        )
+        button.click()
+        time.sleep(0.5)  # TODO: Better way to delay?
+
+        # Only new category should be visible
+        self.assertEqual(self._get_item_vis_count(), 1)
+        # Setting should be updated
+        self.assertFalse(
+            app_settings.get(
+                APP_NAME, 'project_list_public_display', user=self.user_no_roles
+            )
+        )
+
     def test_project_list_title(self):
         """Test project list title rendering"""
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self.wait_for_icon_update()
+
         row = self._get_project_row(self.project)
         icon = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-title-container'
@@ -501,6 +598,7 @@ class TestHomeView(ProjectUITestBase):
             + f'<strong>{self.project.title}</strong>'
         )
         self.assertEqual(link_html.get_attribute('innerHTML'), expected)
+
         # Assert no extra icons are present
         title = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-list-title-td'
@@ -535,6 +633,7 @@ class TestHomeView(ProjectUITestBase):
     def test_project_list_title_category(self):
         """Test project list title rendering with category"""
         self.login_and_redirect(self.user_owner, self.url, **self.wait_kwargs)
+        self.wait_for_icon_update()
         row = self._get_project_row(self.category)
         icon = row.find_element(
             By.CLASS_NAME, 'sodar-pr-project-title-container'
@@ -1741,8 +1840,8 @@ class TestProjectDetailView(
         with self.assertRaises(NoSuchElementException):
             self.selenium.find_element(By.ID, 'sodar-pr-details-card-stats')
 
-    def test_copy_uuid_visibility_default(self):
-        """Test default UUID copy button visibility (should not be visible)"""
+    def test_ops_dropdown_visibility(self):
+        """Test project ops dropdown visibility"""
         users = [
             self.superuser,
             self.user_owner_cat,
@@ -1750,29 +1849,54 @@ class TestProjectDetailView(
             self.user_contributor_cat,
             self.user_guest_cat,
             self.user_viewer_cat,
-            self.user_finder_cat,
             self.user_owner,
             self.user_delegate,
             self.user_contributor,
             self.user_guest,
             self.user_viewer,
         ]
-        for user in users:
-            self.login_and_redirect(user, self.url)
-            with self.assertRaises(NoSuchElementException):
-                self.selenium.find_element(By.ID, 'sodar-pr-btn-copy-uuid')
-
-    def test_copy_uuid_visibility_enabled(self):
-        """Test UUID copy button visibility with setting enabled"""
-        app_settings.set(
-            plugin_name='userprofile',
-            setting_name='enable_project_uuid_copy',
-            value=True,
-            user=self.user_owner,
-        )
         self.assert_element_exists(
-            [self.user_owner], self.url, 'sodar-pr-btn-copy-uuid', True
+            users, self.url, 'sodar-pr-project-ops-btn', True
         )
+
+    def test_ops_dropdown_content(self):
+        """Test project ops dropdown content"""
+        self.assertEqual(self.project.description, '')
+        self.assertEqual(self.project.title_slug, '')
+        self.login_and_redirect(self.user_owner, self.url)
+        dd = self.selenium.find_element(By.ID, 'sodar-pr-project-ops-btn')
+        desc_link = dd.find_element(By.ID, 'sodar-pr-project-op-link-desc')
+        # Empty description = link should be disabled
+        self.assertIn('disabled', desc_link.get_attribute('class'))
+        self.assertIsNotNone(
+            dd.find_element(By.ID, 'sodar-pr-project-op-link-uuid')
+        )
+        self.assertIsNotNone(
+            dd.find_element(By.ID, 'sodar-pr-project-op-link-url')
+        )
+        slug_link = dd.find_element(By.ID, 'sodar-pr-project-op-link-slug')
+        # No title slug = link should be disabled
+        self.assertIn('disabled', slug_link.get_attribute('class'))
+
+    def test_ops_dropdown_content_desc(self):
+        """Test project ops dropdown content with description set"""
+        self.project.description = 'description'
+        self.project.save()
+        self.login_and_redirect(self.user_owner, self.url)
+        dd = self.selenium.find_element(By.ID, 'sodar-pr-project-ops-btn')
+        desc_link = dd.find_element(By.ID, 'sodar-pr-project-op-link-desc')
+        # Link should be enabled
+        self.assertNotIn('disabled', desc_link.get_attribute('class'))
+
+    def test_ops_dropdown_content_slug(self):
+        """Test project ops dropdown content with title slug set"""
+        self.project.title_slug = 'test-project'
+        self.project.save()
+        self.login_and_redirect(self.user_owner, self.url)
+        dd = self.selenium.find_element(By.ID, 'sodar-pr-project-ops-btn')
+        slug_link = dd.find_element(By.ID, 'sodar-pr-project-op-link-slug')
+        # Link should be enabled
+        self.assertNotIn('disabled', slug_link.get_attribute('class'))
 
     def test_plugin_links(self):
         """Test visibility of app plugin links"""
@@ -2191,6 +2315,43 @@ class TestProjectDetailView(
             f'<strong>{self.project.title}</strong>',
         )
 
+    def test_category_project_list_empty(self):
+        """Test rendering of project list in empty category"""
+        self.project.delete()
+        self.login_and_redirect(self.user_owner, self.url_cat)
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located(
+                (By.ID, 'sodar-pr-project-list-message')
+            )
+        )
+        # No rows present
+        self.assertEqual(self._get_pr_item_vis_count(), 0)
+        # Controls should be disabled
+        self.assertEqual(
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-project-list-link-public'
+            ).is_enabled(),
+            False,
+        )
+        self.assertEqual(
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-project-list-link-star'
+            ).is_enabled(),
+            False,
+        )
+        self.assertEqual(
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-project-list-page-length'
+            ).is_enabled(),
+            False,
+        )
+        self.assertEqual(
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-project-list-filter'
+            ).is_enabled(),
+            False,
+        )
+
     def test_category_project_list_no_highlight(self):
         """Test rendering of project list in category with no highlight"""
         app_settings.set(
@@ -2415,13 +2576,11 @@ class TestProjectCreateView(RemoteSiteMixin, ProjectUITestBase):
     def test_settings_label_icon(self):
         """Test rendering of app settings icon for project creation"""
         self.login_and_redirect(self.superuser, self.url)
+        self.wait_for_icon_update()
         select = Select(
             self.selenium.find_element(By.CSS_SELECTOR, PROJECT_SELECT_CSS)
         )
         select.select_by_value(PROJECT_TYPE_PROJECT)
-        WebDriverWait(self.selenium, 10).until(
-            ec.presence_of_element_located((By.TAG_NAME, 'svg'))
-        )
         find_args = (By.CSS_SELECTOR, f'div[id="{PROJECT_SETTING_ID}"]')
         logo = self.selenium.find_element(*find_args).find_element(
             By.TAG_NAME, 'svg'

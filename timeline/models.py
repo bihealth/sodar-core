@@ -4,6 +4,7 @@ import logging
 import uuid
 
 from datetime import datetime
+from importlib import import_module
 from typing import Any, Optional, Union
 
 from django.conf import settings
@@ -11,12 +12,13 @@ from django.db import models
 from django.db.models import Max, Q, QuerySet
 
 # Projectroles dependency
+from projectroles import __version__ as pr_version
 from projectroles.models import Project
 
 
-logger = logging.getLogger(__name__)
-# Access Django user model
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
+logger = logging.getLogger(__name__)
+
 
 # Local constants
 TL_STATUS_OK = 'OK'
@@ -163,6 +165,18 @@ class TimelineEvent(models.Model):
         'specified in rules)',
     )
 
+    #: Site version on event creation
+    site_version = models.TextField(
+        blank=True, max_length=128, help_text='Site version on event creation'
+    )
+
+    #: SODAR Core version on event creation
+    core_version = models.TextField(
+        blank=True,
+        max_length=128,
+        help_text='SODAR Core version on event creation',
+    )
+
     #: UUID for the event
     sodar_uuid = models.UUIDField(
         default=uuid.uuid4, unique=True, help_text='Event SODAR UUID'
@@ -182,6 +196,20 @@ class TimelineEvent(models.Model):
         return 'TimelineEvent({})'.format(
             ', '.join(repr(v) for v in self.get_repr_values())
         )
+
+    def save(self, *args, **kwargs):
+        """Override save() to populate fields"""
+        if not self.pk:
+            try:
+                site = import_module(settings.SITE_PACKAGE)
+                self.site_version = getattr(site, '__version__', '')[:128]
+            except Exception:
+                self.site_version = ''
+            try:
+                self.core_version = pr_version[:128]
+            except Exception:
+                self.core_version = ''
+        super().save(*args, **kwargs)
 
     def get_repr_values(self) -> list[str]:
         return [

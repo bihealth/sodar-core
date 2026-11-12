@@ -35,7 +35,7 @@ provider.
 
 .. figure:: _static/app_projectroles/sodar_login.png
     :align: center
-    :scale: 75%
+    :scale: 80%
 
     SODAR Core login form
 
@@ -66,7 +66,7 @@ the general view of your site is split into the following elements:
 
 .. figure:: _static/app_projectroles/sodar_user_dropdown.png
     :align: center
-    :scale: 75%
+    :scale: 80%
 
     User dropdown
 
@@ -74,9 +74,20 @@ Home View
 ---------
 
 As content within a SODAR Core based site is by default sorted into projects,
-the home view displays a tree view of categories and projects to choose from.
-You can filter the list with a search term or restrict display to your starred
-projects.
+the home view displays a list of categories and projects to which you have
+access. The list may be paginated if enough projects are available. The title
+bar of the project list card displays controls for viewing the list:
+
+:guilabel:`Public`
+    Toggle displaying of public access projects to which you have no explicitly
+    set role.
+:guilabel:`Starred`
+    Toggle displaying all categories and projects, or only those you have added
+    to your favourites by using the star icon link in project views.
+:guilabel:`Page`
+    Amount of categories and projects to include per page in the list.
+:guilabel:`Filter`
+    Search for categories or projects by name by typing into this field.
 
 .. hint::
 
@@ -98,18 +109,31 @@ For categories, the view also displays the :guilabel:`Category Statistics` card.
 This card contains statistics from site apps regarding data in projects within
 the category and its possible subcategories.
 
-For each page in a project app which extends the default projectroles template
-layout, the **project title bar** is displayed on the top of the page. This
-contains the project title and description and a link to "star" the project into
-your favourites. Below this, the **project app title bar** with possible
-app-specific controls is usually displayed.
-
 .. figure:: _static/app_projectroles/sodar_project_detail.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Project detail view
 
+For each page in a project app which extends the default projectroles template
+layout, the *project header* is displayed on the top of the page. The header
+contains the project title, a link to "star" the project to add it to your
+favourites as well as a dropdown for project operations. Special statuses for
+the project may be displayed using icons next to the project title.
+
+The :guilabel:`Project Operations` dropdown allows you to view the project
+description and copy the project UUID or URL into your clipboard. If a title
+slug is set for the project, you can also copy a human-readable version of the
+URL for easier access.
+
+.. figure:: _static/app_projectroles/sodar_project_ops.png
+    :align: center
+    :scale: 70%
+
+    Project operations dropdown
+
+Below the project header, the *project app title bar* with possible
+app-specific controls is usually displayed.
 
 Category and Project Management
 ===============================
@@ -151,7 +175,7 @@ may be modified later.
 
 .. figure:: _static/app_projectroles/sodar_category_create.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Category/project creation form
 
@@ -180,7 +204,7 @@ the target category or superuser status.
 
 .. figure:: _static/app_projectroles/sodar_project_update.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Category/project updating form
 
@@ -233,6 +257,22 @@ enabled by administrators. The sites will appear as checkboxes as
 :guilabel:`Enable project on {SITE-NAME}`.
 
 For more information, see :ref:`app_projectroles_usage_remote`.
+
+Title Slug
+----------
+
+A unique human-readable string for the project title is generated on project
+creation. This title can be used in providing users human-readable project URLs,
+which will redirect to the project detail view with the actual project UUID.
+
+It is possible to update this string afterwards via the
+:guilabel:`Title slug` field. The formatting will be normalized into a slugified
+format on posting the update form.
+
+.. warning::
+
+    Updating existing title slugs will break any previously shared
+    human-friendly URLs for the project.
 
 App Settings
 ------------
@@ -300,7 +340,7 @@ the project update view, now labeled :guilabel:`Unarchive`.
 
 .. figure:: _static/app_projectroles/sodar_archive.png
     :align: center
-    :scale: 65%
+    :scale: 60%
 
     Archived project and unarchive button in project update view
 
@@ -323,7 +363,7 @@ more information, see :ref:`app_projectroles_usage_remote`.
 
 .. figure:: _static/app_projectroles/sodar_project_delete.png
     :align: center
-    :scale: 65%
+    :scale: 60%
 
     Project deletion confirmation form
 
@@ -480,7 +520,7 @@ project creation and updating view.
 
 .. figure:: _static/app_projectroles/site_app_settings.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Site app settings view
 
@@ -530,7 +570,7 @@ based site.
 
 .. figure:: _static/app_projectroles/sodar_remote_sites.png
     :align: center
-    :scale: 60%
+    :scale: 55%
 
     Remote site list in source mode
 
@@ -590,7 +630,7 @@ target site will sync the data by sending a request to the source site.
 
 .. figure:: _static/app_projectroles/sodar_remote_projects.png
     :align: center
-    :scale: 50%
+    :scale: 55%
 
     Remote project list viewed as a source site
 
@@ -678,7 +718,7 @@ such.
 
 .. figure:: _static/app_projectroles/sodar_remote_project_links.png
     :align: center
-    :scale: 75%
+    :scale: 60%
 
     Remote project links in the project detail view
 

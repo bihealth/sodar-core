@@ -207,6 +207,7 @@ $(document).ready(function () {
    Init Clipboards
    ***************/
   new ClipboardJS('.sodar-copy-btn')
+  new ClipboardJS('.sodar-copy-link')
 
   /******************
    Copy link handling
@@ -238,6 +239,20 @@ $(document).ready(function () {
       }
       $(this).dequeue()
     })
+  })
+})
+
+
+/* Initialize project description modal showing ----------------------------- */
+
+
+$(document).ready(function () {
+  $('#sodar-pr-project-op-link-desc').click(function () {
+    $('#sodar-modal').modal('hide')
+    $('.modal-title').text($(this).attr('data-desc-title'))
+    $('.modal-body').html(
+      '<p class="mb-0">' + $(this).attr('data-desc-content') + '</p>')
+    $('#sodar-modal').modal('show')
   })
 })
 

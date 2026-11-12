@@ -102,17 +102,16 @@
     tourEnabled = true
     tour.addStep('role_invites', {
       title: 'Member Invites',
-      text: 'In this view you can invite people who are not yet users of the ' +
-            'site to become members in the ' +
-            '{% get_display_name 'PROJECT' %}. For people who are already ' +
-            'users on the site, you should use "Add Member" instead.',
+      text: `In this view you can invite people who are not yet users of the
+      site to become members in the {% get_display_name 'PROJECT' %}. For people
+      who are already users on the site, you should use "Add Member" instead.`,
       advanceOn: '.docs-link click',
       showCancelLink: true
     })
     tour.addStep('invite_list', {
       title: 'Invite List',
-      text: 'List of existing invites for this ' +
-            '{% get_display_name 'PROJECT' %} can be seen here.',
+      text: `List of existing invites for this {% get_display_name 'PROJECT' %}
+      can be seen here.`,
       attachTo: '#sodar-pr-invite-list top',
       advanceOn: '.docs-link click',
       showCancelLink: true
@@ -120,9 +119,8 @@
     if ($('.sodar-pr-invite-item-expire').length) {
       tour.addStep('invite_expire', {
         title: 'Invite Expiry Date',
-        text: 'Invites will expire after a time set by the site' +
-              'administration. The expiry date for each invite is displayed' +
-              'in this column.',
+        text: `Invites will expire after a time set by the siteadministration.
+        The expiry date for each invite is displayedin this column.`,
         attachTo: '.sodar-pr-invite-item-expire top',
         advanceOn: '.docs-link click',
         showCancelLink: true
@@ -131,7 +129,7 @@
     if ($('.sodar-pr-invite-dropdown').length) {
       tour.addStep('role_menu', {
         title: 'Invite Dropdown',
-        text: 'The invite can be resent or revoked through this dropdown.',
+        text: `The invite can be resent or revoked through this dropdown.`,
         attachTo: '.sodar-pr-invite-dropdown left',
         advanceOn: '.docs-link click',
         showCancelLink: true,
@@ -140,9 +138,9 @@
     if ($('#sodar-pr-role-ops-dropdown').length) {
       tour.addStep('role_ops', {
         title: 'Member Operations Dropdown',
-        text: 'From this dropdown you can access operations for adding ' +
-              'new members to the {% get_display_name 'PROJECT' %} and ' +
-              'inviting users not yet on the site.',
+        text: `From this dropdown you can access operations for adding new
+        members to the {% get_display_name 'PROJECT' %} and inviting users not
+        yet on the site.`,
         attachTo: '#sodar-pr-role-ops-dropdown left',
         advanceOn: '.docs-link click',
         showCancelLink: true

@@ -100,7 +100,7 @@ You should see the following:
 
 .. figure:: _static/for_the_impatient/login.png
     :align: center
-    :scale: 50%
+    :scale: 45%
 
     Login view
 
@@ -109,7 +109,7 @@ your home view:
 
 .. figure:: _static/for_the_impatient/project_list.png
     :align: center
-    :scale: 50%
+    :scale: 60%
 
     Project list
 
@@ -136,9 +136,9 @@ category. Next, click the :guilabel:`Create a Project or Category` link to
 create an "Example Project" within. The project details view should look as
 follows.
 
-.. figure:: _static/for_the_impatient/project_details.png
+.. figure:: _static/for_the_impatient/project_detail.png
     :align: center
-    :scale: 50%
+    :scale: 55%
 
     Project details view
 
@@ -161,7 +161,7 @@ uploading a few files, you will see a trace of actions in the Timeline app:
 
 .. figure:: _static/for_the_impatient/timeline.png
     :align: center
-    :scale: 50%
+    :scale: 55%
 
     Timeline app
 

@@ -193,6 +193,9 @@ The following settings can be used to configure martor:
         'spellcheck': env.str('MARTOR_ENABLE_CONFIG_SPELLCHECK', 'false'),
         'hljs': env.str('MARTOR_ENABLE_CONFIG_HLJS', 'false'),
     }
+    MARTOR_PREVIEW_PLACEHOLDER = env.str(
+        'MARTOR_PREVIEW_PLACEHOLDER', 'Markdown preview'
+    )
     MARTOR_ALTERNATIVE_CSS_FILE_THEME = env.str(
         'MARTOR_ALTERNATIVE_CSS_FILE_THEME',
         'projectroles/css/projectroles.css',
@@ -320,6 +323,9 @@ The following projectroles settings are **optional**:
     The number of delegate roles allowed per project. The amount is limited to 1
     per project if not set, unlimited if set to 0. Will be ignored for remote
     projects synchronized from a source site (int)
+``PROJECTROLES_TITLE_SLUG_MAX_LEN``
+    Maximum length for the project title slug, used as human-friendly alias to
+    access a project. Supports values between 15 and 4096.
 ``PROJECTROLES_BROWSER_WARNING``
     If true, display a warning to users using Internet Explorer (bool)
 ``PROJECTROLES_ALLOW_LOCAL_USERS``
@@ -331,10 +337,6 @@ The following projectroles settings are **optional**:
     If true, allow non-admin local users to update their user account details.
     This can also be be set False per each user by modifying the
     ``enable_update`` field in the user model (bool, default=True)
-``PROJECTROLES_KIOSK_MODE``
-    If true, allow accessing certain project views *without* user authentication
-    in order to e.g. demonstrate features in a kiosk-style deployment. Also
-    hides and/or disables views not intended to be used in this mode (bool)
 ``PROJECTROLES_BREADCRUMB_STICKY``
     Set this false to make project breadcrumb navigation scroll along page
     content. If true, maintain a sticky breadcrumb below the titlebar instead.
@@ -361,6 +363,10 @@ The following projectroles settings are **optional**:
 ``PROJECTROLES_SUPPORT_CONTACT``
     Support contact to be displayed for users, overrides ``ADMINS``. Input as
     "name:email" (string)
+``PROJECTROLES_USER_PROFILE_LINK``
+    Direct UI user links to their user profile if set true. If false,
+    ``mailto:`` links to the user email are used instead. Only takes effect if
+    the ``userprofile`` app is enabled.
 
 Example:
 
@@ -378,7 +384,6 @@ Example:
     PROJECTROLES_DELEGATE_LIMIT = 1
     PROJECTROLES_BROWSER_WARNING = True
     PROJECTROLES_ALLOW_LOCAL_USERS = True
-    PROJECTROLES_KIOSK_MODE = False
     PROJECTROLES_API_USER_LIST_RESTRICT=True
 
 .. warning::
@@ -396,11 +401,6 @@ Example:
     authorized for these roles. Furthermore, only roles for **existing** local
     users will be synchronized. New local users will have to be added manually
     through the Django admin or shell on the target site.
-
-.. warning::
-
-    The ``PROJECTROLES_KIOSK_MODE`` setting is under development and considered
-    experimental. More implementation, testing and documentation is forthcoming.
 
 
 Backend App Settings

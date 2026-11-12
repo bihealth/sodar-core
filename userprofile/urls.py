@@ -1,14 +1,20 @@
 from django.urls import path
 
 from userprofile import views
+from userprofile import views_ajax
 
 app_name = 'userprofile'
 
-urlpatterns = [
+urls_detail = [
     path(
         route='profile',
         view=views.UserDetailView.as_view(),
         name='detail',
+    ),
+    path(
+        route='profile/<uuid:user>',
+        view=views.UserDetailView.as_view(),
+        name='detail_public',
     ),
     path(
         route='settings/update',
@@ -36,3 +42,18 @@ urlpatterns = [
         name='email_delete',
     ),
 ]
+
+urls_list = [
+    path(route='profiles', view=views.UserListView.as_view(), name='list'),
+]
+
+# Ajax API views
+urls_ajax = [
+    path(
+        route='ajax/profiles',
+        view=views_ajax.UserListAjaxView.as_view(),
+        name='ajax_list',
+    ),
+]
+
+urlpatterns = urls_detail + urls_list + urls_ajax

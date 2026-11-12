@@ -1150,6 +1150,60 @@ class TestCleanAppSettings(
         self.assertEqual(AppSetting.objects.count(), 8)
 
 
+@override_settings(DEBUG=True)
+class TestCreateDevUsers(TestCase):
+    """Tests for createdevusers command"""
+
+    def setUp(self):
+        super().setUp()
+        self.cmd_name = 'createdevusers'
+
+    def test_create(self):
+        """Test creating users"""
+        self.assertEqual(User.objects.count(), 0)
+        call_command(self.cmd_name)
+        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
+        for u in DEV_USER_NAMES:
+            user = User.objects.filter(
+                username=u,
+                name=f'{u.capitalize()} Example',
+                first_name=u.capitalize(),
+                last_name='Example',
+                email=f'{u}@example.com',
+            ).first()
+            self.assertIsNotNone(user)
+            self.assertEqual(user.check_password(DEFAULT_PASSWORD), True)
+
+    def test_create_custom_password(self):
+        """Test creating users with custom password"""
+        call_command(self.cmd_name, password=CUSTOM_PASSWORD)
+        for u in DEV_USER_NAMES:
+            user = User.objects.filter(username=u).first()
+            self.assertEqual(user.check_password(CUSTOM_PASSWORD), True)
+
+    def test_create_existing(self):
+        """Test creating users with existing user in list"""
+        self.make_user(DEV_USER_NAMES[0])
+        self.assertEqual(User.objects.count(), 1)
+        call_command(self.cmd_name)
+        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
+
+    def test_create_existing_not_in_list(self):
+        """Test creating users with existing user not in list"""
+        self.make_user('user_new')
+        self.assertEqual(User.objects.count(), 1)
+        call_command(self.cmd_name)
+        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES) + 1)
+
+    @override_settings(DEBUG=False)
+    def test_create_no_debug(self):
+        """Test creating users with debug mode disabled (should fail)"""
+        self.assertEqual(User.objects.count(), 0)
+        with self.assertRaises(SystemExit):
+            call_command(self.cmd_name)
+        self.assertEqual(User.objects.count(), 0)
+
+
 class TestRemoveRoles(
     ProjectMixin,
     RoleMixin,
@@ -1859,55 +1913,135 @@ class TestTransferRolesCommand(
         self.assertTrue(self.user_contributor.is_active)
 
 
-@override_settings(DEBUG=True)
-class TestCreateDevUsers(TestCase):
-    """Tests for createdevusers command"""
+class TestUpdateTitleSlugs(
+    ProjectMixin,
+    RoleMixin,
+    RoleAssignmentMixin,
+    ProjectInviteMixin,
+    BatchUpdateRolesMixin,
+    TestCase,
+):
+    """Tests for updatetitleslugs command"""
 
     def setUp(self):
         super().setUp()
-        self.cmd_name = 'createdevusers'
+        self.init_roles()
+        self.category = self.make_project(
+            'Test Category', PROJECT_TYPE_CATEGORY, None
+        )
+        self.project = self.make_project(
+            'Test Project', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.cmd_name = 'updatetitleslugs'
+        self.logger_name = LOGGER_PREFIX + self.cmd_name
 
-    def test_create(self):
-        """Test creating users"""
-        self.assertEqual(User.objects.count(), 0)
-        call_command(self.cmd_name)
-        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
-        for u in DEV_USER_NAMES:
-            user = User.objects.filter(
-                username=u,
-                name=f'{u.capitalize()} Example',
-                first_name=u.capitalize(),
-                last_name='Example',
-                email=f'{u}@example.com',
-            ).first()
-            self.assertIsNotNone(user)
-            self.assertEqual(user.check_password(DEFAULT_PASSWORD), True)
+    def test_update(self):
+        """Test update with empty title slugs"""
+        self.assertEqual(self.category.title_slug, '')
+        self.assertEqual(self.project.title_slug, '')
 
-    def test_create_custom_password(self):
-        """Test creating users with custom password"""
-        call_command(self.cmd_name, password=CUSTOM_PASSWORD)
-        for u in DEV_USER_NAMES:
-            user = User.objects.filter(username=u).first()
-            self.assertEqual(user.check_password(CUSTOM_PASSWORD), True)
-
-    def test_create_existing(self):
-        """Test creating users with existing user in list"""
-        self.make_user(DEV_USER_NAMES[0])
-        self.assertEqual(User.objects.count(), 1)
-        call_command(self.cmd_name)
-        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES))
-
-    def test_create_existing_not_in_list(self):
-        """Test creating users with existing user not in list"""
-        self.make_user('user_new')
-        self.assertEqual(User.objects.count(), 1)
-        call_command(self.cmd_name)
-        self.assertEqual(User.objects.count(), len(DEV_USER_NAMES) + 1)
-
-    @override_settings(DEBUG=False)
-    def test_create_no_debug(self):
-        """Test creating users with debug mode disabled (should fail)"""
-        self.assertEqual(User.objects.count(), 0)
-        with self.assertRaises(SystemExit):
+        with self.assertLogs(self.logger_name, 'INFO') as cm:
             call_command(self.cmd_name)
-        self.assertEqual(User.objects.count(), 0)
+        self.category.refresh_from_db()
+        self.project.refresh_from_db()
+        self.assertEqual(self.category.title_slug, 'test-category')
+        self.assertEqual(self.project.title_slug, 'test-project')
+
+        self.assertIn(
+            f'Updated category {self.category.get_log_title()}: test-category',
+            cm.output[0],
+        )
+        self.assertIn(
+            f'Updated project {self.project.get_log_title()}: test-project',
+            cm.output[1],
+        )
+
+    def test_update_partially_filled(self):
+        """Test update with partially filled title slugs"""
+        self.category.title_slug = 'previously-set'
+        self.category.save()
+        self.assertEqual(self.project.title_slug, '')
+
+        call_command(self.cmd_name)
+        self.category.refresh_from_db()
+        self.project.refresh_from_db()
+        # Category should be unchanged
+        self.assertEqual(self.category.title_slug, 'previously-set')
+        self.assertEqual(self.project.title_slug, 'test-project')
+
+    def test_update_check(self):
+        """Test update with check mode"""
+        self.assertEqual(self.category.title_slug, '')
+        self.assertEqual(self.project.title_slug, '')
+
+        with self.assertLogs(self.logger_name, 'INFO') as cm:
+            call_command(self.cmd_name, check=True)
+        self.category.refresh_from_db()
+        self.project.refresh_from_db()
+        self.assertEqual(self.category.title_slug, '')
+        self.assertEqual(self.project.title_slug, '')
+
+        self.assertIn(
+            f'Found category {self.category.get_log_title()}: test-category',
+            cm.output[1],
+        )
+        self.assertIn(
+            f'Found project {self.project.get_log_title()}: test-project',
+            cm.output[2],
+        )
+
+    def test_update_force(self):
+        """Test update with force mode"""
+        self.category.title_slug = 'previously-set'
+        self.category.save()
+        self.assertEqual(self.project.title_slug, '')
+
+        call_command(self.cmd_name, force=True)
+        self.category.refresh_from_db()
+        self.project.refresh_from_db()
+        # Category should be updated
+        self.assertEqual(self.category.title_slug, 'test-category')
+        self.assertEqual(self.project.title_slug, 'test-project')
+
+    def test_update_check_and_force(self):
+        """Test update with check and force modes"""
+        self.assertEqual(self.category.title_slug, '')
+        self.assertEqual(self.project.title_slug, '')
+
+        with self.assertLogs(self.logger_name, 'INFO') as cm:
+            call_command(self.cmd_name, check=True, force=True)
+        self.category.refresh_from_db()
+        self.project.refresh_from_db()
+        self.assertEqual(self.category.title_slug, '')
+        self.assertEqual(self.project.title_slug, '')
+
+        self.assertIn(
+            f'Found category {self.category.get_log_title()}: test-category',
+            cm.output[2],
+        )
+        self.assertIn(
+            f'Found project {self.project.get_log_title()}: test-project',
+            cm.output[3],
+        )
+
+    def test_update_dupe(self):
+        """Test update with a duplicate project name"""
+        category2 = self.make_project(
+            'Test Category 2', PROJECT_TYPE_CATEGORY, None
+        )
+        project2 = self.make_project(
+            'Test Project', PROJECT_TYPE_PROJECT, category2
+        )
+
+        call_command(self.cmd_name, force=True)
+        self.category.refresh_from_db()
+        self.project.refresh_from_db()
+        category2.refresh_from_db()
+        project2.refresh_from_db()
+        self.assertEqual(self.category.title_slug, 'test-category')
+        self.assertEqual(
+            self.project.title_slug,
+            f'test-project-{str(self.project.sodar_uuid)[:8]}',
+        )
+        self.assertEqual(category2.title_slug, 'test-category-2')
+        self.assertEqual(project2.title_slug, 'test-project')
