@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.5.1 (WIP)
+************
+
+Release Highlights
+==================
+
+- Fix missing setuptools-scm build requirement
+
+
 v1.5.0 (2026-11-12)
 *******************
 

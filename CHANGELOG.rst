@@ -5,6 +5,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **General**
+    - Missing setuptools-scm build requirement in ``pyproject.toml`` (#2046)
+
+
 v1.5.0 (2026-11-12)
 ===================
 
