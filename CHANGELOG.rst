@@ -14,7 +14,7 @@ Fixed
 - **General**
     - Missing setuptools-scm build requirement in ``pyproject.toml`` (#2046)
 - **Projectroles**
-    - Incorrect SODAR Core version returned if installed as dependency (#2047)
+    - ``projectroles.__version__`` incorrect if installed as dependency (#2047, #2051)
 
 
 v1.5.0 (2026-11-12)

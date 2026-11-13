@@ -12,6 +12,10 @@ from setuptools_scm import get_version as get_version_scm
 dist_origin = ''
 try:
     dist_origin = distribution('django-sodar-core').origin
+except AttributeError:
+    # HACK: Fix for Python v3.12 (see #2051)
+    # We add a dummy string to dist_origin to force retrieval of package version
+    dist_origin = 'x'
 except PackageNotFoundError:
     pass
 if dist_origin:
