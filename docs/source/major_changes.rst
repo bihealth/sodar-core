@@ -10,14 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v1.5.1 (WIP)
-************
+v1.5.1 (2026-11-16)
+*******************
 
 Release Highlights
 ==================
 
 - Fix missing setuptools-scm build requirement
 - Fix incorrect SODAR Core version returning if installed as dependency
+- Fix PROJECTROLES_USER_PROFILE_LINK setting not handled as optional
 
 
 v1.5.0 (2026-11-12)
@@ -70,10 +71,11 @@ These template tags in ``projectroles_common_tags`` have changed signatures.
 They now return different values based on the requesting user.
 
 ``get_user_badge()``
-    ``User`` object added as first mandatory argument. This object must
-    correspond to the requesting user.
+    Added first mandatory argument ``request_user``, expecting a ``User``
+    object corresponding to the requesting user.
 ``get_user_html()``
-    ``HttpRequest`` object added as second optional argument.
+    Added the optional ``request`` argument, expecting an ``HTTPRequest``
+    object.
 
 Kiosk Mode Removed
 ------------------

@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.5.1 (2026-11-16)
+===================
 
 Fixed
 -----
@@ -15,6 +15,7 @@ Fixed
     - Missing setuptools-scm build requirement in ``pyproject.toml`` (#2046)
 - **Projectroles**
     - ``projectroles.__version__`` incorrect if installed as dependency (#2047, #2051)
+    - ``PROJECTROLES_USER_PROFILE_LINK`` setting not handled as optional (#2048)
 
 
 v1.5.0 (2026-11-12)
