@@ -254,7 +254,7 @@ def get_user_html(user: User, request: Optional[HttpRequest] = None) -> str:
     profile_link = (
         request is not None
         and request.user.is_authenticated
-        and settings.PROJECTROLES_USER_PROFILE_LINK
+        and getattr(settings, 'PROJECTROLES_USER_PROFILE_LINK', True)
     )
     title = user.get_full_name()
     if not user.is_active:
@@ -308,9 +308,8 @@ def get_user_badge(
         icon = 'mdi:account'
         variant = 'primary'
         user_class = 'active'
-    profile_link = (
-        request_user.is_authenticated
-        and settings.PROJECTROLES_USER_PROFILE_LINK
+    profile_link = request_user.is_authenticated and getattr(
+        settings, 'PROJECTROLES_USER_PROFILE_LINK', True
     )
     if extra_class and not extra_class.startswith(' '):
         extra_class = ' ' + extra_class
