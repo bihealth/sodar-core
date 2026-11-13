@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Fix missing setuptools-scm build requirement
+- Fix incorrect SODAR Core version returning if installed as dependency
 
 
 v1.5.0 (2026-11-12)
