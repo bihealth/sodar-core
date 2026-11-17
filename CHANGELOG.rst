@@ -21,6 +21,9 @@ Fixed
 
 - **Projectroles**
     - ``__version__`` not working with PyPI install (#2056)
+    - Duplicate ``#sodar-pr-project-list-page-length`` CSS rule sets (#2060)
+- **Userprofile**
+    - User list page length control padding (#2058)
 
 Removed
 -------

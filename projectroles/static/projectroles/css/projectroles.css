@@ -341,22 +341,12 @@ table.sodar-card-table-bordered tbody tr:last-child td {
   max-width: 320px !important;
 }
 
-#sodar-pr-project-list-page-length {
-  width: 50px;
-}
-
 #sodar-pr-project-list-filter {
   width: 185px !important;
 }
 
 button#sodar-pr-project-list-link-star {
   padding-top: 2px;
-}
-
-select#sodar-pr-project-list-page-length {
-  max-width: 100px !important;
-  height: 30px;
-  padding-top: 4px;
 }
 
 table.sodar-pr-project-list-table tbody tr {
@@ -711,6 +701,19 @@ a.sodar-nav-link-last {
 
 .sodar-header-input-group input.form-control {
   height: 30px;
+}
+
+select.sodar-header-input-page-length {
+  width: 50px !important;
+  max-width: 100px !important;
+  height: 30px;
+  padding-top: 4px;
+}
+/* HACK for another browser difference */
+@supports (-moz-appearance: none) {
+  select.sodar-header-input-page-length {
+    padding-top: 5px;
+  }
 }
 
 .sodar-form-control-table {
