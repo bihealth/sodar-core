@@ -81,10 +81,5 @@ Relevant files in the root of the repository are detailed here.
 ``requirements.txt``
     Requirements file placed here for compatibility. Actual requirements can be
     found in ``requirements/*.txt``.
-``setup.cfg``
-    Settings for Versioneer and possible other components using legacy
-    configuration. Generally these should not be touched.
 ``setup.py``
     The setup file for the ``django-sodar-core`` package.
-``versioneer.py``
-    Versioneer file for maintaining the SODAR Core version.

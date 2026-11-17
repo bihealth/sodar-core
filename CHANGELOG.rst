@@ -20,6 +20,12 @@ Fixed
 - **Projectroles**
     - ``__version__`` not working with PyPI install (#2056)
 
+Removed
+-------
+
+- **General**
+    - Versioneer dependency references (#2055)
+
 
 v1.5.1 (2026-11-16)
 ===================

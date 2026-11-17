@@ -20,5 +20,3 @@ recursive-exclude */management/__pycache__ *
 recursive-exclude */management/commands/__pycache__ *
 
 include requirements/base.txt
-include versioneer.py
-include projectroles/_version.py
