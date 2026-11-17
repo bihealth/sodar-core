@@ -10,6 +10,17 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.5.2 (WIP)
+************
+
+Release Highlights
+==================
+
+- Update runtime SODAR Core version retrieval to use importlib
+- Fix incorrect SODAR Core version with PyPI install
+- General bug fixes and minor updates
+
+
 v1.5.1 (2026-11-16)
 *******************
 
