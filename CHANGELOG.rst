@@ -13,6 +13,8 @@ Changed
 
 - **Projectroles**
     - Retrieve runtime ``__version__`` from importlib instead of setuptools-scm (#2056)
+- **Userprofile**
+    - Rename "User List" display titles to "Site Users" (#2057)
 
 Fixed
 -----

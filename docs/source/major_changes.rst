@@ -16,6 +16,7 @@ v1.5.2 (WIP)
 Release Highlights
 ==================
 
+- Rename User List to Site Users
 - Update runtime SODAR Core version retrieval to use importlib
 - Fix incorrect SODAR Core version with PyPI install
 - General bug fixes and minor updates

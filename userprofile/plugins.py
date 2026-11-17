@@ -63,7 +63,7 @@ class UserListSiteAppPlugin(SiteAppPluginPoint):
     name = 'userprofile_list'
 
     #: Title (used in templates)
-    title = 'User List'
+    title = 'Site Users'
 
     #: UI URLs
     urls = urls_list

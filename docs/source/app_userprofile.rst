@@ -74,7 +74,7 @@ user dropdown menu:
 
 :guilabel:`User Profile`
     Link to your own user profile.
-:guilabel:`User List`
+:guilabel:`Site Users`
     List of all users on the site.
 
 User Profile
@@ -161,14 +161,15 @@ For each email address displayed in the list, there are controls to re-send the
 verification email (in case of an unverified email) and deleting the address.
 
 
-User List
----------
+Site Users
+----------
 
-The User List view shows a table with basic information for all the users in the
-site. By default, each username links to the profile of the corresponding user.
+The Site Users view shows a table with basic information for all the users in
+the site. By default, each username links to the profile of the corresponding
+user.
 
 .. figure:: _static/app_userprofile/sodar_user_list.png
     :align: center
     :scale: 60%
 
-    User list view
+    Site Users view
