@@ -18,9 +18,9 @@ Release Highlights
 
 - Rename User List to Site Users
 - Update runtime SODAR Core version retrieval to use importlib
+- Fix project API view crash with duplicate project title on root level
 - Fix incorrect SODAR Core version with PyPI install
 - Fix get_login_info() crash on unset LDAP settings
-- Fix userprofile layout issues
 - General bug fixes and minor updates
 
 

@@ -325,6 +325,16 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
         }
         self.assertEqual(response_data, expected)
 
+    def test_get_dupe_title_root(self):
+        """Test GET with duplicate project title on root level (see #2066)"""
+        # Create second root category and subcategory with existing name
+        cat2 = self.make_project('TestCategory2', PROJECT_TYPE_CATEGORY, None)
+        self.make_project(self.category.title, PROJECT_TYPE_CATEGORY, cat2)
+        response = self.request_knox(self.url)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 4)
+
     def test_get_finder_v2_0(self):
         """Test GET as finder with API v2.0"""
         self.make_assignment(self.category, self.user_new, self.role_finder)

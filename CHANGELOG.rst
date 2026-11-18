@@ -23,6 +23,7 @@ Fixed
     - ``__version__`` not working with PyPI install (#2056)
     - Duplicate ``#sodar-pr-project-list-page-length`` CSS rule sets (#2060)
     - ``get_login_info()`` crash from unset LDAP settings (#2059)
+    - ``ProjectSerializer`` crash with duplicate project title on root level (#2066)
 - **Userprofile**
     - User list page length control padding (#2058)
 
