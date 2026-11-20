@@ -122,6 +122,7 @@ NO_VALUE_MSG = 'Value not set in request data'
 VIEW_NOT_ACCEPTABLE_VERSION_MSG = (
     'This view is not available in the given API version'
 )
+USER_LIST_DISABLE_MSG = 'User list viewing is disabled on this site'
 USER_LIST_RESTRICT_MSG = (
     'User details access restricted: user does not have contributor access or '
     'above in any category or project '
@@ -1600,6 +1601,8 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
     view is only accessible by users who have a contributor role or above in at
     least one category or project.
 
+    Raises HTTP 503 ``PROJECTROLES_USER_LIST_ENABLE`` is set False.
+
     **URL:** ``/project/api/users/list``
 
     **Methods:** ``GET``
@@ -1637,6 +1640,10 @@ class UserListAPIView(ProjectrolesAPIVersioningMixin, ListAPIView):
 
     def get(self, request, *args, **kwargs):
         """Override get() to restrict access if set on server"""
+        if not request.user.is_superuser and not getattr(
+            settings, 'PROJECTROLES_USER_LIST_ENABLE', True
+        ):
+            raise ServiceUnavailable(USER_LIST_DISABLE_MSG)
         role_kw = {
             'user': request.user,
             'role__rank__lte': ROLE_RANKING[PROJECT_ROLE_CONTRIBUTOR],

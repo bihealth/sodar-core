@@ -173,3 +173,9 @@ user.
     :scale: 60%
 
     Site Users view
+
+.. note::
+
+    Administrators can prohibit regular users access to this view or restrict
+    its visibility to users with roles in projects on the site. If you do not
+    see a link to this view in your UI, it has been disabled.

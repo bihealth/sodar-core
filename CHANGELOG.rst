@@ -8,6 +8,15 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - ``PROJECTROLES_USER_LIST_ENABLE`` Django setting (#2069)
+    - ``UserListAPIView`` access disabling (#2069)
+- **Userprofile**
+    - ``UserListView`` access disabling and restricting (#2071)
+
 Changed
 -------
 

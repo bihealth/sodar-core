@@ -16,6 +16,8 @@ v1.5.2 (WIP)
 Release Highlights
 ==================
 
+- Add site-level user list access control
+- Add access restricting to user list UI view
 - Rename User List to Site Users
 - Update runtime SODAR Core version retrieval to use importlib
 - Fix project API view crash with duplicate project title on root level

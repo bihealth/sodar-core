@@ -13,6 +13,7 @@ from projectroles.tests.base import SiteAppPermissionTestBase
 
 
 # SODAR constants
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 
 
@@ -164,3 +165,21 @@ class TestUserProfilePermissions(
         url = reverse('userprofile:list')
         self.assert_response(url, [self.superuser, self.regular_user], 200)
         self.assert_response(url, self.anonymous, 302)
+
+    @override_settings(PROJECTROLES_USER_LIST_ENABLE=False)
+    def test_get_list_view_disable(self):
+        """Test GET with user list view disabled"""
+        url = reverse('userprofile:list')
+        self.assert_response(url, [self.superuser], 200)
+        self.assert_response(url, [self.regular_user, self.anonymous], 302)
+
+    @override_settings(PROJECTROLES_API_USER_DETAIL_RESTRICT=True)
+    def test_get_list_view_restrict(self):
+        """Test GET with user list view role restriction"""
+        self.init_roles()
+        url = reverse('userprofile:list')
+        user_role = self.make_user('user_role')
+        cat = self.make_project('TestCategory', PROJECT_TYPE_CATEGORY, None)
+        self.make_assignment(cat, user_role, self.role_contributor)
+        self.assert_response(url, [self.superuser, user_role], 200)
+        self.assert_response(url, [self.regular_user, self.anonymous], 302)
