@@ -13,6 +13,7 @@ Changed
 
 - **Projectroles**
     - Retrieve runtime ``__version__`` from importlib instead of setuptools-scm (#2056)
+    - Update remote sync docs (#2064)
 - **Userprofile**
     - Rename "User List" display titles to "Site Users" (#2057)
 

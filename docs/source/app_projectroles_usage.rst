@@ -634,29 +634,20 @@ target site will sync the data by sending a request to the source site.
 
     Remote project list viewed as a source site
 
-.. note::
+Considerations for remote sync as a source site:
 
-    The *read roles* access level also provides metadata of the categories above
-    the selected project so that the project structure can be maintained.
-
-.. note::
-
-    Only LDAP/AD user roles and local administrator *owner* roles are provided
-    to the target site. Other local user roles are ignored.
-
-.. note::
-
-    Access levels for purely checking the existence of the project and only
-    reading project metadata (title, description..) without member roles are
-    implemented in the data model and backend, but currently disabled in the UI.
-
-.. note::
-
-    If synchronizing a project with *public access* enabled, this setting
-    is **not** automatically set on the target site. If you wish to make the
-    project also publicly accessible, it needs to be explicitly set by the
-    project owner, delegate or a superuser in the :guilabel:`Update Project`
-    form on the target site.
+- The *read roles* access level also provides metadata of the categories above
+  the selected project so that the project structure can be maintained.
+- Only LDAP/AD user roles and local administrator *owner* roles are provided
+  to the target site. Other local user roles are ignored.
+- Access levels for purely checking the existence of the project and only
+  reading project metadata (title, description..) without member roles are
+  implemented in the data model and backend, but currently disabled in the UI.
+- If synchronizing a project with *public access* enabled, this setting is
+  **not** automatically set on the target site. If you wish to make the project
+  also publicly accessible, it needs to be explicitly set by the project owner,
+  delegate or a superuser in the :guilabel:`Update Project` form on the target
+  site.
 
 As Target Site
 --------------
@@ -683,29 +674,28 @@ Alternatively, the following management command can be used:
 
     $ ./manage.py syncremote
 
-.. note::
+Considerations for remote sync as a target site:
 
-    Creating local projects under a category synchronized from a remote source
-    site is **not** allowed. For having local projects on a target site, you
-    should create and use a local root category.
+- Creating local projects under a category synchronized from a remote source
+  site is **not** allowed. For having local projects on a target site, you
+  should create and use a local root category.
+- If a local user is the owner of a synchronized project on the source site, the
+  user defined in the ``PROJECTROLES_DEFAULT_ADMIN`` will be given the owner
+  role. Hence you **must** have this setting defined if you are implementing a
+  SODAR Core based site in target mode.
+- Local non-owner users can be granted roles if
+  ``PROJECTROLES_ALLOW_LOCAL_USERS`` is set on the target site. However, local
+  users must be manually created by a target site admin in order for their data
+  and roles to be synchronized.
+- Activity status for all users except superusers is synchronized.
 
-.. note::
+.. important::
 
-    If a local user is the owner of a synchronized project on the source site,
-    the user defined in the ``PROJECTROLES_DEFAULT_ADMIN`` will be given the
-    owner role. Hence you **must** have this setting defined if you are
-    implementing a SODAR Core based site in target mode.
-
-.. note::
-
-    Local non-owner users can be granted roles if
-    ``PROJECTROLES_ALLOW_LOCAL_USERS`` is set on the target site. However, local
-    users must be manually created by a target site admin in order for their
-    data and roles to be synchronized.
-
-.. note::
-
-    Activity status for all users except superusers is synchronized.
+    In the current implementation, a target site will always use the current
+    SODAR Core default for the projectroles sync API version in its requests.
+    The source site **must** support that version, otherwise the request will
+    fail. Support for multiple API versions as a target site may be added in a
+    later SODAR Core release.
 
 Project Detail View Links
 -------------------------
