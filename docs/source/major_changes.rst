@@ -23,6 +23,7 @@ Release Highlights
 - Fix project API view crash with duplicate project title on root level
 - Fix incorrect SODAR Core version with PyPI install
 - Fix get_login_info() crash on unset LDAP settings
+- General layout tweaks
 - General bug fixes and minor updates
 
 

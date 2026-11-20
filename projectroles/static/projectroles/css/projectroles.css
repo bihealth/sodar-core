@@ -501,6 +501,11 @@ a.btn[disabled='disabled'] {
   border: 1px solid #dfdfdf;
 }
 
+/* HACK for operations dropdown caret padding */
+div.sodar-subtitle-container button.dropdown-toggle:after {
+  margin-bottom: -1px;
+}
+
 .sodar-list-btn-group {
   height: 24px;
 }
