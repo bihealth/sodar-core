@@ -548,8 +548,10 @@ a.sodar-pr-btn-copy-secret i {
   line-height: 22px;
 }
 
-.sodar-pr-content-header-btn button svg {
-  margin-top: 2px !important;
+.sodar-pr-content-header-btn button {
+  padding-top: 3px;
+  padding-left: 7px;
+  padding-right: 7px;
 }
 
 #sodar-pr-project-ops-btn {
