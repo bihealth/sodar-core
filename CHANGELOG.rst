@@ -5,8 +5,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-Unreleased
-==========
+v1.5.2 (2026-11-23)
+===================
 
 Added
 -----
@@ -21,11 +21,12 @@ Changed
 -------
 
 - **Projectroles**
-    - Retrieve runtime ``__version__`` from importlib instead of setuptools-scm (#2056)
+    - Retrieve runtime ``__version__`` from importlib (#2056)
     - Update remote sync docs (#2064)
     - Improve project dropdown layout (#2067)
 - **Userprofile**
     - Rename "User List" display titles to "Site Users" (#2057)
+    - Refactor permission tests (#2054)
 
 Fixed
 -----
