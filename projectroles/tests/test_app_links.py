@@ -412,7 +412,7 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
             {
                 'name': 'userprofile_list',
                 'url': reverse('userprofile:list'),
-                'label': 'User List',
+                'label': 'Site Users',
                 'icon': 'mdi:account-multiple-outline',
                 'active': False,
             },
@@ -510,7 +510,7 @@ class TestAppLinkAPI(ProjectMixin, RoleAssignmentMixin, UIViewTestBase):
             {
                 'name': 'userprofile_list',
                 'url': reverse('userprofile:list'),
-                'label': 'User List',
+                'label': 'Site Users',
                 'icon': 'mdi:account-multiple-outline',
                 'active': False,
             },

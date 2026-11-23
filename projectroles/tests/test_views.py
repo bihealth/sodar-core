@@ -6524,6 +6524,8 @@ class TestProjectInviteProcessLoginView(
         ENABLE_LDAP=True,
         AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN,
         AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE',
+        AUTH_LDAP2_USERNAME_DOMAIN='EXAMPLE2',
+        AUTH_LDAP2_DOMAIN_PRINTABLE='EXAMPLE2',
     )
     def test_get_wrong_type_local(self):
         """Test ProjectInviteProcessLoginView GET with local invite"""
@@ -6579,6 +6581,8 @@ class TestProjectInviteProcessNewUserView(
         ENABLE_LDAP=True,
         AUTH_LDAP_USERNAME_DOMAIN=LDAP_DOMAIN,
         AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE',
+        AUTH_LDAP2_USERNAME_DOMAIN='EXAMPLE2',
+        AUTH_LDAP2_DOMAIN_PRINTABLE='EXAMPLE2',
     )
     def test_get_wrong_type_ldap(self):
         """Test GET with LDAP invite"""

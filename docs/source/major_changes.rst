@@ -10,6 +10,23 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v1.5.2 (2026-11-23)
+*******************
+
+Release Highlights
+==================
+
+- Add site-level user list access control
+- Add access restricting to user list UI view
+- Rename User List to Site Users
+- Update runtime SODAR Core version retrieval to use importlib
+- Fix project API view crash with duplicate project title on root level
+- Fix incorrect SODAR Core version with PyPI install
+- Fix get_login_info() crash with unset LDAP settings
+- General layout tweaks
+- General bug fixes and minor updates
+
+
 v1.5.1 (2026-11-16)
 *******************
 
@@ -141,6 +158,7 @@ These features were deprecated in v1.4 and have been removed in v1.5.
 Template Tag ``render_markdown()``
     This template tag was removed. Use the ``safe_markdown`` filter from the
     ``martor`` package.
+
 
 v1.4.5 (2026-09-16)
 *******************

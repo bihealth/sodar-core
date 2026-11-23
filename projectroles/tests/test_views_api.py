@@ -56,6 +56,7 @@ from projectroles.tests.test_views import (
 )
 from projectroles.utils import build_secret
 from projectroles.views import PROJECT_BLOCK_MSG
+from projectroles.views_api import USER_LIST_DISABLE_MSG
 
 
 app_settings = AppSettingAPI()
@@ -324,6 +325,16 @@ class TestProjectListAPIView(ProjectrolesAPIViewTestBase):
             ],
         }
         self.assertEqual(response_data, expected)
+
+    def test_get_dupe_title_root(self):
+        """Test GET with duplicate project title on root level (see #2066)"""
+        # Create second root category and subcategory with existing name
+        cat2 = self.make_project('TestCategory2', PROJECT_TYPE_CATEGORY, None)
+        self.make_project(self.category.title, PROJECT_TYPE_CATEGORY, cat2)
+        response = self.request_knox(self.url)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 4)
 
     def test_get_finder_v2_0(self):
         """Test GET as finder with API v2.0"""
@@ -4046,38 +4057,35 @@ class TestUserListAPIView(ProjectrolesAPIViewTestBase):
             self.url, token=self.get_token(self.user_ldap)
         )
         self.assertEqual(response.status_code, 200)
-        response_data = json.loads(response.content)
-        self.assertEqual(len(response_data), 1)  # System users not returned
+        self.assertEqual(len(response.data), 1)  # System users not returned
         expected = [self.get_serialized_user(self.user_ldap)]
-        self.assertEqual(response_data, expected)
+        self.assertEqual(response.data, expected)
 
     def test_get_superuser(self):
         """Test GET as superuser"""
         response = self.request_knox(self.url)  # Default token is for superuser
         self.assertEqual(response.status_code, 200)
-        response_data = json.loads(response.content)
-        self.assertEqual(len(response_data), 4)
+        self.assertEqual(len(response.data), 4)
         expected = [
             self.get_serialized_user(self.user),
             self.get_serialized_user(self.user_owner_cat),
             self.get_serialized_user(self.user_owner),
             self.get_serialized_user(self.user_ldap),
         ]
-        self.assertEqual(response_data, expected)
+        self.assertEqual(response.data, expected)
 
     def test_get_pagination(self):
         """Test GET with pagination"""
         url = self.url + '?page=1'
         response = self.request_knox(url)
         self.assertEqual(response.status_code, 200)
-        response_data = json.loads(response.content)
         expected = {
             'count': 4,
             'next': TEST_SERVER_URL + self.url + '?page=2',
             'previous': None,
             'results': [self.get_serialized_user(self.user)],
         }
-        self.assertEqual(response_data, expected)
+        self.assertEqual(response.data, expected)
 
     def test_get_include_system_users(self):
         """Test GET with include_system_users=True"""
@@ -4086,15 +4094,14 @@ class TestUserListAPIView(ProjectrolesAPIViewTestBase):
             token=self.get_token(self.user_ldap),
         )
         self.assertEqual(response.status_code, 200)
-        response_data = json.loads(response.content)
-        self.assertEqual(len(response_data), 4)
+        self.assertEqual(len(response.data), 4)
         expected = [
             self.get_serialized_user(self.user),
             self.get_serialized_user(self.user_owner_cat),
             self.get_serialized_user(self.user_owner),
             self.get_serialized_user(self.user_ldap),
         ]
-        self.assertEqual(response_data, expected)
+        self.assertEqual(response.data, expected)
 
     def test_get_include_system_users_v1_0(self):
         """Test GET with include_system_users=True and version 1.0"""
@@ -4104,6 +4111,15 @@ class TestUserListAPIView(ProjectrolesAPIViewTestBase):
             version='1.0',
         )
         self.assertEqual(response.status_code, 406)
+
+    @override_settings(PROJECTROLES_USER_LIST_ENABLE=False)
+    def test_get_disable(self):
+        """Test GET with user list disabled"""
+        response = self.request_knox(
+            self.url, token=self.get_token(self.user_ldap)
+        )
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.data['detail'], USER_LIST_DISABLE_MSG)
 
 
 class TestUserRetrieveAPIView(

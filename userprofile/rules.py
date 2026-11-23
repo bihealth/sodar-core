@@ -1,7 +1,13 @@
 import rules
 
+from django.conf import settings
+
 # Projectroles dependency
 from projectroles import rules as pr_rules  # To access common predicates
+from projectroles.models import RoleAssignment, ROLE_RANKING, SODAR_CONSTANTS
+
+# Projectroles constants
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 
 
 # Predicates -------------------------------------------------------------
@@ -10,6 +16,20 @@ from projectroles import rules as pr_rules  # To access common predicates
 @rules.predicate
 def can_delete_email(user, obj):
     return obj.user == user
+
+
+@rules.predicate
+def can_view_list(user):
+    if not getattr(settings, 'PROJECTROLES_USER_LIST_ENABLE', True):
+        return False
+    if getattr(settings, 'PROJECTROLES_API_USER_DETAIL_RESTRICT', False):
+        role_kw = {
+            'user': user,
+            'role__rank__lte': ROLE_RANKING[PROJECT_ROLE_CONTRIBUTOR],
+        }
+        if RoleAssignment.objects.filter(**role_kw).count() == 0:
+            return False
+    return True
 
 
 # Rules ------------------------------------------------------------------
@@ -45,4 +65,4 @@ rules.add_perm(
 )
 
 # Allow viewing user list
-rules.add_perm('userprofile.view_list', rules.is_authenticated)
+rules.add_perm('userprofile.view_list', rules.is_authenticated & can_view_list)

@@ -170,33 +170,29 @@ def get_help_highlight(user: User) -> str:
 def get_login_info() -> str:
     """Return HTML info for the login page"""
     ret = '<p>Please log in'
-
     if getattr(settings, 'ENABLE_LDAP', False):
-        ret += ' using your ' + settings.AUTH_LDAP_DOMAIN_PRINTABLE
-        if (
-            getattr(settings, 'ENABLE_LDAP_SECONDARY', False)
-            and settings.AUTH_LDAP2_DOMAIN_PRINTABLE
+        ret += ' using your ' + getattr(
+            settings, 'AUTH_LDAP_DOMAIN_PRINTABLE', ''
+        )
+        if getattr(settings, 'ENABLE_LDAP_SECONDARY', False) and getattr(
+            settings, 'AUTH_LDAP2_DOMAIN_PRINTABLE'
         ):
-            ret += ' or ' + settings.AUTH_LDAP2_DOMAIN_PRINTABLE
+            ret += ' or ' + getattr(settings, 'AUTH_LDAP2_DOMAIN_PRINTABLE', '')
         ret += (
             ' account. Enter your user name as <code>username@{}</code>'.format(
                 getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '')
             )
         )
-        if (
-            settings.ENABLE_LDAP_SECONDARY
-            and settings.AUTH_LDAP2_USERNAME_DOMAIN
+        if getattr(settings, 'ENABLE_LDAP_SECONDARY') and getattr(
+            settings, 'AUTH_LDAP2_USERNAME_DOMAIN'
         ):
-            ret += (
-                f' or <code>username@{settings.AUTH_LDAP2_USERNAME_DOMAIN}'
-                f'</code>'
-            )
+            ldap2_domain = getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', '')
+            ret += f' or <code>username@{ldap2_domain}</code>'
         if getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False):
             ret += (
                 '. To access the site with local account enter your user '
                 'name as <code>username</code>'
             )
-
     ret += '.</p>'
     return ret
 

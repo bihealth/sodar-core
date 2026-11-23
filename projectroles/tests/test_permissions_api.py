@@ -2913,6 +2913,28 @@ class TestUserListAPIView(ProjectrolesAPIPermissionTestBase):
         self.assert_response_api(self.url, self.auth_users, 200)
         self.assert_response_api(self.url, self.anonymous, 401)
 
+    @override_settings(PROJECTROLES_USER_LIST_ENABLE=False)
+    def test_get_disable(self):
+        """Test GET with user list disabled"""
+        good_users = [self.superuser]
+        bad_users = [
+            self.user_owner_cat,
+            self.user_delegate_cat,
+            self.user_contributor_cat,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest_cat,
+            self.user_viewer_cat,
+            self.user_finder_cat,
+            self.user_guest,
+            self.user_viewer,
+            self.user_no_roles,
+        ]
+        self.assert_response_api(self.url, good_users, 200)
+        self.assert_response_api(self.url, bad_users, 503)
+        self.assert_response_api(self.url, self.anonymous, 401)
+
     @override_settings(PROJECTROLES_API_USER_DETAIL_RESTRICT=True)
     def test_get_restrict(self):
         """Test GET with user detail access restriction"""

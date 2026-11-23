@@ -5,7 +5,7 @@
 
 {% get_django_setting 'SITE_TITLE' as site_title %}
 
-{% block title %}User List{% endblock %}
+{% block title %}Site Users{% endblock title %}
 
 {% block css %}
   {{ block.super }}
@@ -18,7 +18,7 @@
 {% block projectroles %}
 
 <div class="row sodar-pr-content-title pt-2">
-  <h2 class="sodar-pr-content-title">User List</h2>
+  <h2 class="sodar-pr-content-title">Site Users</h2>
 </div>
 
 <div class="container-fluid sodar-page-container">
@@ -29,9 +29,10 @@
     <div class="card-header">
       <h4>
         <i class="iconify" data-icon="mdi:account-multiple-outline"></i>
-        Site Users
+        Users
         <div class="input-group sodar-header-input-group pull-right">
-          <select class="form-control" id="sodar-up-user-list-page-length">
+          <select class="form-control sodar-header-input-page-length"
+                  id="sodar-up-user-list-page-length">
             <option selected value="10">Page</option>
             <option value="10">10</option>
             <option value="25">25</option>
@@ -85,8 +86,7 @@
     tourEnabled = true
     tour.addStep('user_list', {
       title: 'User List',
-      text: `In this view you can browse the profile of all users on this
-      site.`,
+      text: `In this view you can view a list of all users on this site.`,
       advanceOn: '.docs-link click',
       showCancelLink: true
     })

@@ -5,6 +5,48 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v1.5.2 (2026-11-23)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - ``PROJECTROLES_USER_LIST_ENABLE`` Django setting (#2069)
+    - ``UserListAPIView`` access disabling (#2069)
+- **Userprofile**
+    - ``UserListView`` access disabling and restricting (#2071)
+
+Changed
+-------
+
+- **Projectroles**
+    - Retrieve runtime ``__version__`` from importlib (#2056)
+    - Update remote sync docs (#2064)
+    - Improve project dropdown layout (#2067)
+- **Userprofile**
+    - Rename "User List" display titles to "Site Users" (#2057)
+    - Refactor permission tests (#2054)
+
+Fixed
+-----
+
+- **Projectroles**
+    - ``__version__`` not working with PyPI install (#2056)
+    - Duplicate ``#sodar-pr-project-list-page-length`` CSS rule sets (#2060)
+    - ``get_login_info()`` crash from unset LDAP settings (#2059)
+    - ``ProjectSerializer`` crash with duplicate project title on root level (#2066)
+    - Operations dropdowns caret padding (#2065)
+- **Userprofile**
+    - User list page length control padding (#2058)
+
+Removed
+-------
+
+- **General**
+    - Versioneer dependency references (#2055)
+
+
 v1.5.1 (2026-11-16)
 ===================
 
@@ -14,7 +56,7 @@ Fixed
 - **General**
     - Missing setuptools-scm build requirement in ``pyproject.toml`` (#2046)
 - **Projectroles**
-    - ``projectroles.__version__`` incorrect if installed as dependency (#2047, #2051)
+    - ``__version__`` incorrect if installed as dependency (#2047, #2051)
     - ``PROJECTROLES_USER_PROFILE_LINK`` setting not handled as optional (#2048)
 
 

@@ -12,9 +12,7 @@ exclude = [
     "build",
     "env",
     "src",
-    "docs",
-    "versioneer.py",
-    "_version.py"
+    "docs"
 ]
 
 [tool.ruff.format]
@@ -28,10 +26,8 @@ exclude = [
     "docs",
     "node_modules",
     "config/*",
-    "versioneer.py",
     "env/*",
-    ".venv",
-    "_version.py"
+    ".venv"
 ]
 # TODO: Review rules, add e.g. B and Q? (see #1910)
 ignore = ["E203", "E266", "E501", "F405"]

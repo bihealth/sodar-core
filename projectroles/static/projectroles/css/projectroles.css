@@ -341,22 +341,12 @@ table.sodar-card-table-bordered tbody tr:last-child td {
   max-width: 320px !important;
 }
 
-#sodar-pr-project-list-page-length {
-  width: 50px;
-}
-
 #sodar-pr-project-list-filter {
   width: 185px !important;
 }
 
 button#sodar-pr-project-list-link-star {
   padding-top: 2px;
-}
-
-select#sodar-pr-project-list-page-length {
-  max-width: 100px !important;
-  height: 30px;
-  padding-top: 4px;
 }
 
 table.sodar-pr-project-list-table tbody tr {
@@ -511,6 +501,11 @@ a.btn[disabled='disabled'] {
   border: 1px solid #dfdfdf;
 }
 
+/* HACK for operations dropdown caret padding */
+div.sodar-subtitle-container button.dropdown-toggle:after {
+  margin-bottom: -1px;
+}
+
 .sodar-list-btn-group {
   height: 24px;
 }
@@ -558,8 +553,10 @@ a.sodar-pr-btn-copy-secret i {
   line-height: 22px;
 }
 
-.sodar-pr-content-header-btn button svg {
-  margin-top: 2px !important;
+.sodar-pr-content-header-btn button {
+  padding-top: 3px;
+  padding-left: 7px;
+  padding-right: 7px;
 }
 
 #sodar-pr-project-ops-btn {
@@ -711,6 +708,19 @@ a.sodar-nav-link-last {
 
 .sodar-header-input-group input.form-control {
   height: 30px;
+}
+
+select.sodar-header-input-page-length {
+  width: 50px !important;
+  max-width: 100px !important;
+  height: 30px;
+  padding-top: 4px;
+}
+/* HACK for another browser difference */
+@supports (-moz-appearance: none) {
+  select.sodar-header-input-page-length {
+    padding-top: 5px;
+  }
 }
 
 .sodar-form-control-table {

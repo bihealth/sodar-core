@@ -675,10 +675,11 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         req_version = parse_version(self.context['request'].version)
         # Set up project to get instance with UUID
         parent = ret.get('parent')
-        project = Project.objects.get(
-            title=ret['title'],
-            **{'parent__sodar_uuid': parent} if parent else {},
-        )
+        if parent:
+            parent_kw = {'parent__sodar_uuid': parent}
+        else:
+            parent_kw = {'parent': None}
+        project = Project.objects.get(title=ret['title'], **parent_kw)
         user = self.context['request'].user
 
         # Return only titles and UUID for projects with finder role
